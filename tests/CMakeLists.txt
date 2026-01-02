@@ -5,6 +5,9 @@ project(${CMAKE_PROJECT_NAME})
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Enable compile command to ease indexing with e.g. clangd
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+
 include(FetchContent)
 FetchContent_Declare(
   googletest
@@ -23,7 +26,10 @@ add_subdirectory(tests)
 
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}
+  PRIVATE
   GTest::gtest_main
+  GTest::gmock
+  GTest::gmock_main
 )
 
 include(GoogleTest)
