@@ -1,24 +1,25 @@
-///////////////////////////////////////////////////////////////////////////////
-//  Copyright Christopher Kormanyos 2007 - 2023.
-//  Distributed under the Boost Software License,
-//  Version 1.0. (See accompanying file LICENSE_1_0.txt
-//  or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
 
-#pragma once
+ #pragma once
 
-
-class Noncopyable
+/**
+ * @brief A base class to prohibit copying (via assignment or construction).
+ * 
+ * From "Real Time C++" by Christopher Kormanyos, which bases it's example on Boost Noncopyable.
+ * https://github.com/ckormanyos/real-time-cpp/blob/master/ref_app/src/util/utility/util_noncopyable.h
+ *
+ * Distributed under the Boost Software License,
+ * Version 1.0. (See accompanying file LICENSE_1_0.txt
+ * or copy at http://www.boost.org/LICENSE_1_0.txt)
+ */
+class noncopyable
 {
 protected:
-    Noncopyable() = default; 
-    ~Noncopyable() = default;
-
+    noncopyable() {}
+    ~noncopyable() {}
 private:
-    Noncopyable(const Noncopyable&) = delete;
-    Noncopyable(Noncopyable&&)      = delete;
+    noncopyable(const noncopyable&) = delete;
+    noncopyable(noncopyable&&)      = delete;
 
-    auto operator=(const Noncopyable&) -> Noncopyable& = delete; 
-    auto operator=(Noncopyable&&)      -> Noncopyable& = delete; 
+    auto operator=(const noncopyable&) -> noncopyable& = delete;
+    auto operator=(noncopyable&&)      -> noncopyable& = delete;
 };
-
