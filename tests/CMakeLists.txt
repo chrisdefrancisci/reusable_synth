@@ -24,10 +24,13 @@ add_executable(
 add_subdirectory(mocks)
 add_subdirectory(tests)
 
-include_directories(${CMAKE_SOURCE_DIR}/../reusable_synth)
-link_directories(${CMAKE_SOURCE_DIR}/../reusable_synth)
-find_library(NAMES ReusableSynth PATH ${CMAKE_SOURCE_DIR}/../reusable_synth/build/Debug)
+# include_directories(${CMAKE_SOURCE_DIR}/../reusable_synth)
+# link_directories(${CMAKE_SOURCE_DIR}/../reusable_synth)
+# find_library(NAMES ReusableSynth PATH ${CMAKE_SOURCE_DIR}/../reusable_synth/build/Debug)
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/../reusable_synth 
+                 ${CMAKE_BINARY_DIR}/reusable_synth)
+                  
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
     ..
@@ -45,6 +48,3 @@ target_link_libraries(
 
 include(GoogleTest)
 gtest_discover_tests(${CMAKE_PROJECT_NAME})
-
-# add_subdirectory(${CMAKE_SOURCE_DIR}/../reusable_synth 
-#                  ${CMAKE_BINARY_DIR}/reusable_synth)
