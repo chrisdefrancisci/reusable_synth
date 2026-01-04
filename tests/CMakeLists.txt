@@ -24,6 +24,12 @@ add_executable(
 add_subdirectory(mocks)
 add_subdirectory(tests)
 
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
+    # Add user defined include paths
+    ..
+    ${CMAKE_SOURCE_DIR}
+)
+
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}
   PRIVATE

@@ -10,8 +10,6 @@
 #include <cstddef>
 #include <reusable_synth/Utils/noncopyable.hpp>
 
-#include "noncopyable.hpp"
-
 template<typename T, const size_t N>
 class RingBuffer : private Noncopyable
 {
