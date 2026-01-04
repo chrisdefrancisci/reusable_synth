@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "task.hpp"
+#include <reusable_synth/Software/task.hpp>
 
 // Mock system tick for testing
 extern "C"
@@ -10,7 +10,8 @@ extern "C"
 // Test task that counts how many times it runs
 static int task_run_count = 0;
 
-void test_task()
+void
+test_task()
 {
     task_run_count++;
 }
