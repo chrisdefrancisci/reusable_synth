@@ -9,5 +9,7 @@ target_sources(ReusableSynth
     PUBLIC
         FILE_SET HEADERS 
         FILES 
+            logger.hpp
             noncopyable.hpp
+            ring_buffer.hpp
 )
