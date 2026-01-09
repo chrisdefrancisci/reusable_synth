@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/chris/Documents/Projects/Synth/software/quantized_looper/extern/reusable_synth/reusable_synth/build/Debug",
+  "command": "/usr/bin/c++ -I/home/chris/Documents/Projects/Synth/software/quantized_looper/extern/reusable_synth/reusable_synth/.. -I/home/chris/Documents/Projects/Synth/software/quantized_looper/extern/reusable_synth/reusable_synth -I/home/chris/Documents/Projects/Synth/software/quantized_looper/extern/reusable_synth/reusable_synth/Hardware -I/home/chris/Documents/Projects/Synth/software/quantized_looper/extern/reusable_synth/reusable_synth/Utils -I/home/chris/Documents/Projects/Synth/software/quantized_looper/extern/reusable_synth/reusable_synth/Software -g -std=gnu++20 -o CMakeFiles/ReusableSynth.dir/Software/task.cpp.o -c /home/chris/Documents/Projects/Synth/software/quantized_looper/extern/reusable_synth/reusable_synth/Software/task.cpp",
+  "file": "/home/chris/Documents/Projects/Synth/software/quantized_looper/extern/reusable_synth/reusable_synth/Software/task.cpp"
+}
+]
