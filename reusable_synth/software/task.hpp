@@ -20,8 +20,7 @@
  *
  */
 
-void
-scheduler();
+void scheduler();
 
 template<typename TickType = uint32_t>
 class timer

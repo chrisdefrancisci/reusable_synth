@@ -2,3 +2,4 @@ tests/build
 tests/.cache
 reusable_synth/build
 reusable_synth/.cache/
+tests/compile_commands.json

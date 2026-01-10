@@ -26,6 +26,6 @@ target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
     ${CMAKE_SOURCE_DIR}
 )
 
-add_subdirectory(Hardware)
-add_subdirectory(Utils)
-add_subdirectory(Software)
+add_subdirectory(hardware)
+add_subdirectory(utils)
+add_subdirectory(software)
