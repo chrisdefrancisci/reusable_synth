@@ -33,8 +33,6 @@ bool task_control_block::execute()
 }
 
 template class timer<uint32_t>;
-<<<<<<< HEAD
-=======
 
 void task_a()
 {
@@ -75,4 +73,3 @@ void scheduler()
           [](task_control_block& tcb) -> bool { return tcb.execute(); });
     }
 }
->>>>>>> 74226fe67423903fd51ebf816f6d1be863a3b3ca

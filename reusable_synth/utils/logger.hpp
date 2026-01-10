@@ -9,7 +9,7 @@
 #include <iostream>
 #include <string_view>
 
-#include <reusable_synth/Utils/ring_buffer.hpp>
+#include <reusable_synth/utils/ring_buffer.hpp>
 
 template<int nLogs, int logLen>
 class Logger {
