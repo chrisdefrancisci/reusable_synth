@@ -7,25 +7,31 @@
 
 #include <cstring>
 #include <iostream>
+#include <string_view>
 
 #include <reusable_synth/Utils/ring_buffer.hpp>
 
 template<int nLogs, int logLen>
-class Logger
-{
+class Logger {
 public:
     Logger();
 
     void aadf();
 
 private:
-    class Log
-    {
+    class Log {
     public:
+        Log()
+          : type(LogType::INFO) {
+            memset(buff, '\0', logLen);
+        };
         const char* pBuffer() { return buff; };
 
     private:
+        enum class LogType { INFO, WARNING, ERROR };
         char buff[logLen] = { 0 };
+        LogType type;
     };
+
     RingBuffer<Log, nLogs> logs;
 };
