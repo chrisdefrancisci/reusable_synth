@@ -66,14 +66,14 @@ TEST(LoggerTest, LoggerOverflow) {
     auto val = logger.remove_log();
     ASSERT_TRUE(val.has_value());
     EXPECT_EQ(val->type(), LogType::INFO) << "Iteration: " << i;
-    std::cout << val->pBuffer() << std::endl;
+    // std::cout << val->pBuffer() << std::endl;
   }
   auto val = logger.remove_log();
   ASSERT_TRUE(val.has_value());
   EXPECT_EQ(val->type(), LogType::WARNING) << "First" << std::endl;
-  std::cout << val->pBuffer() << std::endl;
+  //   std::cout << val->pBuffer() << std::endl;
   val = logger.remove_log();
   ASSERT_TRUE(val.has_value());
   EXPECT_EQ(val->type(), LogType::INFO) << "Second" << std::endl;
-  std::cout << val->pBuffer() << std::endl;
+  //   std::cout << val->pBuffer() << std::endl;
 }
