@@ -159,7 +159,7 @@ public:
         // TODO: find alternative solution, stringstream is likely a terrible
         // choice for a memory constrained system
         std::stringstream ss;
-        if (logsBuffer.full()) {
+        if (logsBuffer.full() && !fullFlag) {
             fullFlag = true;
             ss << std::source_location::current().file_name() << ":"
                << std::source_location::current().line() << " "
