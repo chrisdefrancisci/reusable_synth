@@ -34,36 +34,8 @@ bool task_control_block::execute()
 
 template class timer<uint32_t>;
 
-void task_a()
-{
-    // TODO: Blink
-}
-
-void task_b()
-{
-    // TODO: Read sensor
-}
-
-void task_c()
-{
-    // TODO: Send telemetry
-}
-
-std::array<task_control_block, 3> task_list = {
-    task_control_block(task_a,
-                       task_control_block::timer_type::milliseconds(2),
-                       task_control_block::timer_type::milliseconds(0)),
-
-    task_control_block(task_b,
-                       task_control_block::timer_type::milliseconds(8),
-                       task_control_block::timer_type::milliseconds(7)),
-
-    task_control_block(task_c,
-                       task_control_block::timer_type::milliseconds(16),
-                       task_control_block::timer_type::milliseconds(13))
-};
-
-void scheduler()
+template<std::size_t N>                                                                                                  
+void scheduler(const std::array<task_control_block, N>& task_list)
 {
     for (;;) {
         // Find first ready task using std::find_if
