@@ -31,7 +31,6 @@ template<typename TickType,
 class Timer
 {
 public:
-    
     /** */
     using TickFuncType = TickType (*)();
 
@@ -54,7 +53,7 @@ public:
      */
     void startInterval(TickType interval)
     {
-        startTick = static_cast<TickType>(getTick()); // set start tick to "now"
+        startTick = getTick();    // set start tick to "now"
         intervalTicks = interval; // set interval "n ticks from now"
     }
 
@@ -66,7 +65,7 @@ public:
      */
     bool timeout() const
     {
-        const TickType current = static_cast<TickType>(getTick());
+        const TickType current = getTick();
         const TickType elapsed = current - startTick;
         return elapsed >= intervalTicks;
     }
