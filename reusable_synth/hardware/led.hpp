@@ -1,7 +1,7 @@
 /**
  * @file led.hpp
  * @author Chris DeFrancisci (chrisdefrancisci@gmail.com)
- * @brief 
+ * @brief
  * @date 2025-12-27
  */
 
@@ -13,10 +13,10 @@
  *
  * @todo This should be moved to reusable_synth/Hardware
  */
-class ledBase 
+class LedBase
 {
 public:
-    virtual ~ledBase() = default;
+    virtual ~LedBase() = default;
     /**
      * @brief Turns LED on.
      */
@@ -29,38 +29,38 @@ public:
 
     /**
      * @brief Set the intensity of the LED.
-     * 
+     *
      * @param value Intensity, from 0 to max range.
      */
     virtual void setIntensity(int value) = 0;
 
     /**
      * @brief Set the Intensity of the LED.
-     * 
+     *
      * @param value Intensity, from 0.0 to 1.0
      */
     virtual void setIntensity(float value) = 0;
 
     /**
      * @brief Get the range of the LED intensity
-     * 
-     * @return std::pair<int, int> 
+     *
+     * @return std::pair<int, int>
      */
     virtual std::pair<int, int> getRange() const = 0;
 
 protected:
-    ledBase() = default;
+    LedBase() = default;
 };
 
 /**
- * @brief A template derived class of ledBase that must be specialized for the hardware.
- * 
- * @todo This should be moved to reusable_synth/Hardware
+ * @brief A template derived class of ledBase that must be specialized for the
+ * hardware.
+ *
  * @tparam T The type of the hardware handle.
  */
-template <typename T>
-class led : public ledBase
+template<typename T>
+class Led : public LedBase
 {
 private:
-    led() = default;
+    Led() = default;
 };

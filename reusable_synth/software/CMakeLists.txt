@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 target_sources(${CMAKE_PROJECT_NAME}
     PRIVATE 
-        task.cpp
     PUBLIC
         FILE_SET HEADERS 
         BASE_DIRS 

@@ -2,7 +2,7 @@
 
 #include <reusable_synth/hardware/led.hpp>
 
-class MockLed : public ledBase {
+class MockLed : public LedBase {
 public:
   MOCK_METHOD(void, on, (), (override));
   MOCK_METHOD(void, off, (), (override));
