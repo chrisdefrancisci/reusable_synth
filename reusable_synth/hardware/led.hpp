@@ -5,6 +5,8 @@
  * @date 2025-12-27
  */
 
+#pragma once
+
 // Standard library includes
 #include <utility>
 
@@ -26,20 +28,6 @@ public:
      * @brief Turns LED off.
      */
     virtual void off() = 0;
-
-    /**
-     * @brief Set the intensity of the LED.
-     *
-     * @param value Intensity, from 0 to max range.
-     */
-    virtual void setIntensity(int value) = 0;
-
-    /**
-     * @brief Set the Intensity of the LED.
-     *
-     * @param value Intensity, from 0.0 to 1.0
-     */
-    virtual void setIntensity(float value) = 0;
 
     /**
      * @brief Get the range of the LED intensity
