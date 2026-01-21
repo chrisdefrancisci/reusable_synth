@@ -20,8 +20,8 @@ TEST(TaskTest, TaskExecutesAfterInterval) {
   mock_tick_count = millis(0);
 
   // Create task that runs every 100ms with tick source
-  TaskControlBlock<millis> task(test_task, mock_get_tick, millis(100),
-                                millis(0));
+  TaskControlBlock<millis, std::function<void()>> task(test_task, mock_get_tick,
+                                                       millis(100), millis(0));
 
   // Should run immediately (offset = 0)
   EXPECT_TRUE(task.execute());
@@ -47,8 +47,8 @@ TEST(TaskTest, TaskWithOffset) {
   mock_tick_count = millis(0);
 
   // Create task with 50ms offset
-  TaskControlBlock<millis> task(test_task, mock_get_tick, millis(100),
-                                millis(50));
+  TaskControlBlock<millis, std::function<void()>> task(test_task, mock_get_tick,
+                                                       millis(100), millis(50));
 
   // Should NOT run immediately (has offset)
   EXPECT_FALSE(task.execute());

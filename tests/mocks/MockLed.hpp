@@ -6,7 +6,7 @@ class MockLed : public LedBase {
 public:
   MOCK_METHOD(void, on, (), (override));
   MOCK_METHOD(void, off, (), (override));
-  MOCK_METHOD(void, setIntensity, (int value), (override));
-  MOCK_METHOD(void, setIntensity, (float value), (override));
+  MOCK_METHOD(void, setIntensity, (int value));
+  MOCK_METHOD(void, setIntensity, (float value));
   MOCK_METHOD((std::pair<int, int>), getRange, (), (const, override));
 };

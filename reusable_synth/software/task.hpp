@@ -123,11 +123,6 @@ public:
     using TimerType = Timer<TickType>;
     /** Supplied tick callback must be acceptable to Timer class. */
     using TickFuncType = Timer<TickType>::TickFuncType;
-    /** The task can be any callable object. This allows tasks to encapsulate
-     * state in a more friendly manner.
-     * @TODO: could template TaskControlBlock to take a class that is callable,
-     * and then we get a reference to the class instead of a copy.
-     */
 
     /**
      * @brief Construct a new Task Control Block object
