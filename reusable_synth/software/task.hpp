@@ -11,7 +11,8 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
-#include <functional>
+#include <concepts>
+#include <memory>
 #include <type_traits>
 
 namespace detail {
@@ -35,7 +36,7 @@ inline constexpr bool is_duration_v = false;
  */
 template<class Rep, class Period>
 inline constexpr bool is_duration_v<std::chrono::duration<Rep, Period>> = true;
-}
+} // namespace detail
 
 /**
  * @brief A helper class to evaluate if a period of time has elapsed.
@@ -94,12 +95,28 @@ private:
 };
 
 /**
- * @brief Periodically completes a task using a timer.
+ * @brief Defines interface to control tasks of different types.
  *
  * @tparam TickType The type to use for the timer.
  */
 template<typename TickType>
-class TaskControlBlock
+class TaskControlBlockInterface
+{
+public:
+    virtual bool execute() = 0;
+    virtual ~TaskControlBlockInterface() {};
+};
+
+/**
+ * @brief Periodically completes a task using a timer.
+ *
+ * @todo Can we require callable object using requires(std::invocable) ?
+ *
+ * @tparam TickType The type to use for the timer.
+ * @tparam TaskType The callable object to execute.
+ */
+template<typename TickType, typename TaskType>
+class TaskControlBlock : public TaskControlBlockInterface<TickType>
 {
 public:
     /** Helper for timer template. */
@@ -107,8 +124,10 @@ public:
     /** Supplied tick callback must be acceptable to Timer class. */
     using TickFuncType = Timer<TickType>::TickFuncType;
     /** The task can be any callable object. This allows tasks to encapsulate
-     * state in a more friendly manner. */
-    using TaskFuncType = std::function<void()>;
+     * state in a more friendly manner.
+     * @TODO: could template TaskControlBlock to take a class that is callable,
+     * and then we get a reference to the class instead of a copy.
+     */
 
     /**
      * @brief Construct a new Task Control Block object
@@ -119,7 +138,28 @@ public:
      * @param offset Initial offset from task evaluation, in order to prevent
      * tasks from regularly being scheduled at the same time.
      */
-    TaskControlBlock(const TaskFuncType task,
+    TaskControlBlock(TaskType& task,
+                     const TickFuncType getTick,
+                     const TickType period,
+                     const TickType offset = 0)
+      : task(task)
+      , time(TimerType(getTick))
+      , period(period)
+      , offset(offset)
+    {
+        time.startInterval(offset);
+    }
+
+    /**
+     * @brief Construct a new Task Control Block object
+     *
+     * @param task The task to update periodically. Can take rvalue.
+     * @param getTick The current tick callback function.
+     * @param period The task evaluation period.
+     * @param offset Initial offset from task evaluation, in order to prevent
+     * tasks from regularly being scheduled at the same time.
+     */
+    TaskControlBlock(TaskType&& task,
                      const TickFuncType getTick,
                      const TickType period,
                      const TickType offset = 0)
@@ -137,7 +177,7 @@ public:
      * @return true If the task executed.
      * @return false If the task did not execute.
      */
-    bool execute()
+    bool execute() override
     {
         if (time.timeout()) {
             time.startInterval(
@@ -150,10 +190,10 @@ public:
     }
 
 private:
-    const TaskFuncType task; // function to execute
-    TimerType time;          // timer to track next run
-    const TickType period;   // how often to run in ticks
-    const TickType offset;   // offset before first run
+    TaskType& task;        // function to execute
+    TimerType time;        // timer to track next run
+    const TickType period; // how often to run in ticks
+    const TickType offset; // offset before first run
 };
 
 /**
@@ -171,16 +211,17 @@ private:
  * priority.
  */
 template<std::size_t N, typename TickType>
-void scheduler(std::array<TaskControlBlock<TickType>, N>& taskList)
+void scheduler(
+  std::array<std::unique_ptr<TaskControlBlockInterface<TickType>>, N>& taskList)
 {
     for (;;) {
         // Find first ready task using std::find_if.
         // Mark as void because we are not actually interested in the return
         // value.
-        (void)std::find_if(taskList.begin(),
-                           taskList.end(),
-                           [](TaskControlBlock<TickType>& tcb) -> bool {
-                               return tcb.execute();
-                           });
+        (void)std::find_if(
+          taskList.begin(),
+          taskList.end(),
+          [](const std::unique_ptr<TaskControlBlockInterface<TickType>>& tcb)
+            -> bool { return tcb->execute(); });
     }
 }

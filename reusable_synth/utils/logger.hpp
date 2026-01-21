@@ -24,6 +24,8 @@ enum class LogType
     ERROR
 };
 
+// TODO: LogType to string
+
 /**
  * @brief Holds a string with a LogType enum.
  *
