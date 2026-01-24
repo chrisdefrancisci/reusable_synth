@@ -57,7 +57,7 @@ public:
             return;
         }
 
-        it->callback();
+        it->ptr->callback();
     }
 
     /**
@@ -84,7 +84,7 @@ public:
      * @return false Registration of class failed due to insufficient space
      * or already used pin.
      */
-    bool isUsed()
+    bool isRegistered()
     {
         auto it = std::find_if(instances.begin(),
                                instances.end(),
@@ -114,7 +114,8 @@ private:
         auto it = std::find_if(instances.begin(),
                                instances.end(),
                                [pin](RegisteredPin registeredPin) {
-                                   return registeredPin.pin == pin;
+                                   return registeredPin.pin == pin &&
+                                          registeredPin.ptr != nullptr;
                                });
 
         // Return early if this pin is already registered.
@@ -153,6 +154,11 @@ private:
         }
     }
 
-    /** Array of registered pins and the associated class instances. */
+    /**
+     * @brief Array of registered pins and the associated class instances.
+     *
+     * If static variables are not declared inline, they must be initialized
+     * elsewhere.
+     */
     static inline std::array<RegisteredPin, pinChangeCount> instances = {};
 };
