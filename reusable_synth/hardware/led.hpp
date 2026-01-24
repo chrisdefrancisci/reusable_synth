@@ -1,7 +1,8 @@
 /**
  * @file led.hpp
  * @author Chris DeFrancisci (chrisdefrancisci@gmail.com)
- * @brief
+ * @brief Defines interfaces for controlling LEDs.
+ * @todo Interface for "analog LED" that could be implemented with PWM or DAC.
  * @date 2025-12-27
  */
 

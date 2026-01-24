@@ -1,7 +1,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <mocks/MockLed.hpp>
+#include <tests/mocks/mock_led.hpp>
 
 using ::testing::AtLeast;
 using ::testing::AtMost;

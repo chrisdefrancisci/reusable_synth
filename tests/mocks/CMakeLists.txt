@@ -9,5 +9,6 @@ target_sources(${CMAKE_PROJECT_NAME}
     PUBLIC
         FILE_SET HEADERS 
         FILES 
-            MockLed.hpp
+            mock_led.hpp
+            mock_pin_change.hpp
 )

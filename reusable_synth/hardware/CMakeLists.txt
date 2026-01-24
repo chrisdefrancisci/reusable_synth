@@ -12,4 +12,5 @@ target_sources(${CMAKE_PROJECT_NAME}
             ${CMAKE_CURRENT_SOURCE_DIR}
         FILES 
             led.hpp
+            pin_change.hpp
 )
