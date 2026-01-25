@@ -16,16 +16,12 @@ public:
       , count(0)
     {
     }
-    int getCount() { return count; }
+    int getCount() const { return count; }
 
 private:
     void callback() override { count++; }
     int count;
 };
-
-using ::testing::AtLeast;
-using ::testing::AtMost;
-using ::testing::Return;
 
 TEST(PinChangeTest, registerPinOnConstruction)
 {
@@ -90,7 +86,17 @@ TEST(PinChangeTest, dispatchCallsMultipleCallbacks)
         pins.push_back(std::make_unique<DerivedPinChange>(i));
     }
 
-    // Call each callback some different number of times
+    // Call each callback some different number of times (pin # + 1)
     for (int pin = 0; pin < pinCount; pin++) {
+        for (int i = 0; i <= pin; i++) {
+            PinChange::irqDispatch(pin);
         }
+    }
+
+    int i = 0;
+    for (const auto& pin : pins) {
+        i++;
+        EXPECT_EQ(static_cast<const DerivedPinChange*>(pin.get())->getCount(),
+                  i);
+    }
 }
