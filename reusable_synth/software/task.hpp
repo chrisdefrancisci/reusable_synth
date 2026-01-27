@@ -122,7 +122,7 @@ public:
     /** Helper for timer template. */
     using TimerType = Timer<TickType>;
     /** Supplied tick callback must be acceptable to Timer class. */
-    using TickFuncType = Timer<TickType>::TickFuncType;
+    using TickFuncType = typename Timer<TickType>::TickFuncType;
 
     /**
      * @brief Construct a new Task Control Block object
