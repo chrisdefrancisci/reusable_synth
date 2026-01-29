@@ -2,6 +2,7 @@
  * @file pin_change.hpp
  * @author Chris DeFrancisci (chrisdefrancisci@gmail.com)
  * @brief Interface for EXTernal Interrupt/event - pin changes.
+ * @todo documentation!
  * @date 2026-01-21
  */
 
@@ -21,43 +22,47 @@ struct RegisteredPin
 {
     int pin = 0;
     InterruptHandler handler;
-    inline bool registered() const { return handler.isConnected(); }
+    inline bool isRegistered() const { return handler.isConnected(); }
 };
 
 using RegisteredPinSpan = std::span<RegisteredPin>;
 
 /**
- * @brief
+ * @brief Checks registration for a pin.
  *
- * @param pin
- * @return true
- * @return false
+ * @param registeredPins The storage location of registered pins.
+ * @param pin The pin to check.
+ * @return true if pin is in the set and has an active interrupt handler.
+ * @return false if pin is not in the set or doesn't have an active interrupt
+ * handler.
  */
-inline bool isRegistered(const RegisteredPinSpan& registeredPins, int pin)
+inline bool is_registered(const RegisteredPinSpan& registeredPins, int pin)
 {
     auto it = std::find_if(registeredPins.begin(),
                            registeredPins.end(),
                            [pin](RegisteredPin registeredPin) {
                                return registeredPin.pin == pin &&
-                                      registeredPin.registered();
+                                      registeredPin.isRegistered();
                            });
 
     return it != registeredPins.end();
 }
 
 /**
- * @brief Get the Next Available object
+ * @brief Get the next address to place a pin, if one is available.
  *
- * @param registeredPins
- * @return std::optional<RegisteredPin*>
+ * @param registeredPins The storage location of registered pins.
+ * @return std::optional<RegisteredPin*> An address in registeredPins or
+ * std::nullopt.
  */
-inline std::optional<RegisteredPin*> getNextAvailable(
+inline std::optional<RegisteredPin*> get_next_available(
   RegisteredPinSpan& registeredPins)
 {
-    auto it = std::find_if(
-      registeredPins.begin(),
-      registeredPins.end(),
-      [](RegisteredPin registeredPin) { return !registeredPin.registered(); });
+    auto it = std::find_if(registeredPins.begin(),
+                           registeredPins.end(),
+                           [](RegisteredPin registeredPin) {
+                               return !registeredPin.isRegistered();
+                           });
     if (it == registeredPins.end()) {
         return std::nullopt;
     }
@@ -65,38 +70,53 @@ inline std::optional<RegisteredPin*> getNextAvailable(
 }
 
 /**
- * @brief Registers each instance of a class derived from PinChangeBase.
+ * @brief
  *
- * @param pin The GPIO pin associated with the interrupt.
+ * @tparam Func
+ * @tparam Class
+ * @param registeredPins
+ * @param pin
+ * @param obj
+ * @return true
+ * @return false
  */
 template<auto Func, typename Class>
-bool registerPin(RegisteredPinSpan& registeredPins, int pin, Class* obj)
+bool register_pin(RegisteredPinSpan& registeredPins, int pin, Class* obj)
 {
-    if (isRegistered(registeredPins, pin)) {
+    if (is_registered(registeredPins, pin)) {
         return false;
     }
-    if (!getNextAvailable(registeredPins).has_value()) {
+    if (!get_next_available(registeredPins).has_value()) {
         return false;
     }
 
-    auto registeredPin = getNextAvailable(registeredPins).value();
+    auto registeredPin = get_next_available(registeredPins).value();
     registeredPin->pin = pin;
     registeredPin->handler.connect<Func>(obj);
 
     return true;
 }
 
+/**
+ * @brief
+ *
+ * @tparam (*Func)()
+ * @param registeredPins
+ * @param pin
+ * @return true
+ * @return false
+ */
 template<void (*Func)()>
-bool registerPin(RegisteredPinSpan& registeredPins, int pin)
+bool register_pin(RegisteredPinSpan& registeredPins, int pin)
 {
-    if (isRegistered(registeredPins, pin)) {
+    if (is_registered(registeredPins, pin)) {
         return false;
     }
-    if (!getNextAvailable(registeredPins).has_value()) {
+    if (!get_next_available(registeredPins).has_value()) {
         return false;
     }
 
-    auto registeredPin = getNextAvailable(registeredPins).value();
+    auto registeredPin = get_next_available(registeredPins).value();
     registeredPin->pin = pin;
     // See https://en.cppreference.com/w/cpp/language/dependent_name.html
     // section, "the template disambiguator for dependent names"
@@ -110,7 +130,7 @@ bool registerPin(RegisteredPinSpan& registeredPins, int pin)
  *
  * @param pin Pin to deregister.
  */
-inline bool deregisterPin(RegisteredPinSpan& registeredPins, int pin)
+inline bool deregister_pin(RegisteredPinSpan& registeredPins, int pin)
 {
     auto it = std::find_if(
       registeredPins.begin(),
@@ -130,7 +150,7 @@ inline bool deregisterPin(RegisteredPinSpan& registeredPins, int pin)
  *
  * @param pin The pin associated with the pin change event.
  */
-inline void irqDispatch(const RegisteredPinSpan& registeredPins, uint16_t pin)
+inline void irq_dispatch(const RegisteredPinSpan& registeredPins, uint16_t pin)
 {
     auto it = std::find_if(
       registeredPins.begin(),
@@ -149,11 +169,11 @@ inline void irqDispatch(const RegisteredPinSpan& registeredPins, uint16_t pin)
  *
  * @return int
  */
-inline int getUsedCount(const RegisteredPinSpan& registeredPins)
+inline int get_used_count(const RegisteredPinSpan& registeredPins)
 {
     int count = 0;
     for (const auto registeredPin : registeredPins) {
-        if (registeredPin.registered()) {
+        if (registeredPin.isRegistered()) {
             count++;
         }
     }

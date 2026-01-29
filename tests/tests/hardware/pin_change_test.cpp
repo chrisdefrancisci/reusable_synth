@@ -1,11 +1,12 @@
 #include <gtest/gtest.h>
 
 #include <reusable_synth/hardware/pin_change.hpp>
+#include <reusable_synth/utils/noncopyable.hpp>
 #include <vector>
 
 static constexpr int pinCount = 3;
 
-class TestPinChange
+class TestPinChange : Noncopyable
 {
 public:
     TestPinChange(uint16_t pin,
@@ -14,12 +15,47 @@ public:
       , pin(pin)
       , count(0)
       , registered(
-          PinChange::registerPin<&TestPinChange::callback>(registeredPins,
-                                                           pin,
-                                                           this))
+          PinChange::register_pin<&TestPinChange::callback>(registeredPins,
+                                                            pin,
+                                                            this))
     {
     }
-    virtual ~TestPinChange() { PinChange::deregisterPin(registeredPins, pin); }
+
+    // TODO create a "peripheral base class" or something
+    // Following "rule of 5", if dtor is defined, the rest of these should be
+    // defined too
+    virtual ~TestPinChange()
+    {
+        if (registered) {
+            PinChange::deregister_pin(registeredPins, pin);
+        }
+    }
+    TestPinChange(const TestPinChange&) = delete;            // Copy ctor
+    TestPinChange& operator=(const TestPinChange&) = delete; // Copy assignment
+
+    TestPinChange(TestPinChange&& other) noexcept // Move ctor
+    {
+        PinChange::deregister_pin(other.registeredPins, other.pin);
+        registeredPins = other.registeredPins;
+        other.registered = false;
+        pin = other.pin;
+        count = 0;
+        registered = PinChange::register_pin<&TestPinChange::callback>(
+          registeredPins, pin, this);
+    }
+    TestPinChange& operator=(TestPinChange&& other) noexcept // Move assignment
+    {
+        if (this != &other) {
+            PinChange::deregister_pin(other.registeredPins, other.pin);
+            registeredPins = other.registeredPins;
+            other.registered = false;
+            pin = other.pin;
+            count = 0;
+            registered = PinChange::register_pin<&TestPinChange::callback>(
+              registeredPins, pin, this);
+        }
+        return *this;
+    }
     int getCount() const { return count; }
     int getPin() const { return pin; }
     bool isRegistered() const { return registered; }
@@ -29,17 +65,17 @@ private:
     std::span<PinChange::RegisteredPin> registeredPins;
     int pin;
     int count;
-    const bool registered;
+    bool registered;
 };
 
 TEST(PinChangeTest, registerPinOnConstruction)
 {
     std::array<PinChange::RegisteredPin, pinCount> registeredPins;
     int pinNum = 0;
-    EXPECT_EQ(PinChange::getUsedCount(registeredPins), 0);
+    EXPECT_EQ(PinChange::get_used_count(registeredPins), 0);
     TestPinChange pin(pinNum, registeredPins);
-    EXPECT_EQ(PinChange::getUsedCount(registeredPins), 1);
-    EXPECT_TRUE(PinChange::isRegistered(registeredPins, pinNum));
+    EXPECT_EQ(PinChange::get_used_count(registeredPins), 1);
+    EXPECT_TRUE(PinChange::is_registered(registeredPins, pinNum));
 }
 
 TEST(PinChangeTest, registerUntilFull)
@@ -50,74 +86,76 @@ TEST(PinChangeTest, registerUntilFull)
     // a UI button press and a peripheral data ready flag?
     std::vector<TestPinChange> pins;
     for (int i = 0; i < pinCount; i++) {
-        EXPECT_EQ(PinChange::getUsedCount(registeredPins), i);
+        EXPECT_EQ(PinChange::get_used_count(registeredPins), i);
         pins.push_back(TestPinChange(i, registeredPins));
-        EXPECT_TRUE(PinChange::isRegistered(registeredPins, i));
+        // pins.emplace_back(i, registeredPins);
+        EXPECT_TRUE(pins.back().isRegistered());
+        EXPECT_TRUE(PinChange::is_registered(registeredPins, i));
     }
-    EXPECT_EQ(PinChange::getUsedCount(registeredPins), pinCount);
+    EXPECT_EQ(PinChange::get_used_count(registeredPins), pinCount);
     // No more objects can be registered
     pins.push_back(TestPinChange(pinCount, registeredPins));
-    EXPECT_EQ(PinChange::getUsedCount(registeredPins), pinCount);
-    EXPECT_FALSE(PinChange::isRegistered(registeredPins, pins.back().getPin()));
+    EXPECT_EQ(PinChange::get_used_count(registeredPins), pinCount);
+    EXPECT_FALSE(
+      PinChange::is_registered(registeredPins, pins.back().getPin()));
 }
 
 TEST(PinChangeTest, dontRegisterDuplicatePins)
 {
     std::array<PinChange::RegisteredPin, pinCount> registeredPins;
     int pinNum = 0;
-    EXPECT_EQ(PinChange::getUsedCount(registeredPins), 0);
+    EXPECT_EQ(PinChange::get_used_count(registeredPins), 0);
     TestPinChange pinOriginal(pinNum, registeredPins);
-    EXPECT_EQ(PinChange::getUsedCount(registeredPins), 1);
-    EXPECT_TRUE(PinChange::isRegistered(registeredPins, pinNum));
+    EXPECT_EQ(PinChange::get_used_count(registeredPins), 1);
+    EXPECT_TRUE(PinChange::is_registered(registeredPins, pinNum));
     TestPinChange pinDuplicate(pinNum, registeredPins);
-    EXPECT_EQ(PinChange::getUsedCount(registeredPins), 1);
+    EXPECT_EQ(PinChange::get_used_count(registeredPins), 1);
     EXPECT_FALSE(pinDuplicate.isRegistered());
 }
 TEST(PinChangeTest, deregisterPinOnDestruction)
 {
-    EXPECT_TRUE(false);
-    // int pinNum = 0;
-    // EXPECT_EQ(PinChangeManager::getUsedCount(), 0);
-    // auto pinToBeDeleted = new DerivedPinChange(pinNum);
-    // EXPECT_EQ(PinChangeManager::getUsedCount(), 1);
-    // delete pinToBeDeleted;
-    // EXPECT_EQ(PinChangeManager::getUsedCount(), 0);
-    // // Ensure deregistration is completed by registering that pin again
-    // DerivedPinChange pinReregistered(pinNum);
-    // EXPECT_EQ(PinChangeManager::getUsedCount(), 1);
-    // EXPECT_TRUE(pinReregistered.isRegistered());
+    std::array<PinChange::RegisteredPin, pinCount> registeredPins;
+    int pinNum = 0;
+    EXPECT_EQ(PinChange::get_used_count(registeredPins), 0);
+    auto pinToBeDeleted = new TestPinChange(pinNum, registeredPins);
+    EXPECT_EQ(PinChange::get_used_count(registeredPins), 1);
+    delete pinToBeDeleted;
+    EXPECT_EQ(PinChange::get_used_count(registeredPins), 0);
+    // Ensure deregistration is completed by registering that pin again
+    TestPinChange pinReregistered(pinNum, registeredPins);
+    EXPECT_EQ(PinChange::get_used_count(registeredPins), 1);
+    EXPECT_TRUE(pinReregistered.isRegistered());
 }
 
 TEST(PinChangeTest, dispatchCallsCallback)
 {
-    EXPECT_TRUE(false);
-    // int pinNum = 0;
-    // DerivedPinChange pin(pinNum);
-    // EXPECT_EQ(pin.getCount(), 0);
-    // PinChangeManager::irqDispatch(pinNum);
-    // EXPECT_EQ(pin.getCount(), 1);
+    std::array<PinChange::RegisteredPin, pinCount> registeredPins;
+    int pinNum = 0;
+    TestPinChange pin(pinNum, registeredPins);
+    EXPECT_EQ(pin.getCount(), 0);
+    PinChange::irq_dispatch(registeredPins, pinNum);
+    EXPECT_EQ(pin.getCount(), 1);
 }
 
 TEST(PinChangeTest, dispatchCallsMultipleCallbacks)
 {
-    EXPECT_TRUE(false);
-    // std::vector<std::unique_ptr<PinChangeManager>> pins;
-    // for (int i = 0; i < pinCount; i++) {
-    //     pins.push_back(std::make_unique<DerivedPinChange>(i));
-    // }
 
-    // // Call each callback some different number of times (pin # + 1)
-    // for (int pin = 0; pin < pinCount; pin++) {
-    //     for (int i = 0; i <= pin; i++) {
-    //         PinChangeManager::irqDispatch(pin);
-    //     }
-    // }
+    std::array<PinChange::RegisteredPin, pinCount> registeredPins;
+    std::vector<TestPinChange> pins;
+    for (int i = 0; i < pinCount; i++) {
+        pins.push_back(TestPinChange(i, registeredPins));
+    }
 
-    // int i = 0;
-    // for (const auto& pin : pins) {
-    //     i++;
-    //     EXPECT_EQ(static_cast<const
-    //     DerivedPinChange*>(pin.get())->getCount(),
-    //               i);
-    // }
+    // Call each callback some different number of times (pin # + 1)
+    for (int pin = 0; pin < pinCount; pin++) {
+        for (int i = 0; i <= pin; i++) {
+            PinChange::irq_dispatch(registeredPins, pin);
+        }
+    }
+
+    int i = 0;
+    for (const auto& pin : pins) {
+        i++;
+        EXPECT_EQ(pin.getCount(), i);
+    }
 }
