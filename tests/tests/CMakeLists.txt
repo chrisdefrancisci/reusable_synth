@@ -4,6 +4,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/hardware/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/middleware/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/software/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/utils/)
 

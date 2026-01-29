@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch",
+            "name": "(gdb) Launch Reusable Synth",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder:reusable_synth}/../tests/build/reusable_synth_tests",

@@ -8,157 +8,155 @@
 #pragma once
 
 #include <algorithm>
-#include <array>
 #include <cstdint>
+#include <optional>
+#include <span>
 
+#include <reusable_synth/hardware/interrupt_handler.hpp>
 #include <reusable_synth/utils/noncopyable.hpp>
 
-template<int pinChangeCount>
-class PinChangeBase : Noncopyable
+namespace PinChange {
+
+struct RegisteredPin
 {
-private:
-    /** Helper struct to contain <pin, PinChangeBase*> pairing. */
-    struct RegisteredPin;
-
-public:
-    /**
-     * @brief Construct a new Pin Change Base object.
-     *
-     * @remarks Attaching the instance to an interrupt can fail without warning.
-     * Must check the number of instances increased using getUsedCount() or
-     * isUsed().
-     *
-     * @param pin
-     */
-    PinChangeBase(uint16_t pin) { registerPin(pin); }
-
-    /**
-     * @brief Destroy the Pin Change Base object
-     *
-     */
-    virtual ~PinChangeBase() { deregisterPin(this); }
-
-    /**
-     * @brief Calls the callback function associated with the pin.
-     *
-     * Use this function in interrupts.
-     *
-     * @param pin The pin associated with the pin change event.
-     */
-    static void irqDispatch(uint16_t pin)
-    {
-        auto it = std::find_if(instances.begin(),
-                               instances.end(),
-                               [pin](RegisteredPin registeredPin) {
-                                   return registeredPin.pin == pin;
-                               });
-
-        if (it == instances.end()) {
-            return;
-        }
-
-        it->ptr->callback();
-    }
-
-    /**
-     * @brief Get the number of used instances of the class.
-     *
-     * @return int
-     */
-    static int getUsedCount()
-    {
-        int count = 0;
-        for (const auto instance : instances) {
-            if (instance.ptr != nullptr) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    /**
-     * @brief Checks if the class was successfully registered to be called by
-     * dispatch().
-     *
-     * @return true Registration of class was successful.
-     * @return false Registration of class failed due to insufficient space
-     * or already used pin.
-     */
-    bool isRegistered()
-    {
-        auto it = std::find_if(instances.begin(),
-                               instances.end(),
-                               [this](RegisteredPin registeredPin) {
-                                   return registeredPin.ptr == this;
-                               });
-        return it != instances.end();
-    }
-
-protected:
-    virtual void callback() = 0;
-
-private:
-    struct RegisteredPin
-    {
-        uint16_t pin = UINT16_MAX;
-        PinChangeBase* ptr = nullptr;
-    };
-
-    /**
-     * @brief Registers each instance of a class derived from PinChangeBase.
-     *
-     * @param pin The GPIO pin associated with the interrupt.
-     */
-    void registerPin(uint16_t pin)
-    {
-        auto it = std::find_if(instances.begin(),
-                               instances.end(),
-                               [pin](RegisteredPin registeredPin) {
-                                   return registeredPin.pin == pin &&
-                                          registeredPin.ptr != nullptr;
-                               });
-
-        // Return early if this pin is already registered.
-        if (it != instances.end()) {
-            return;
-        }
-
-        it = std::find_if(
-          instances.begin(), instances.end(), [](RegisteredPin registeredPin) {
-              return registeredPin.ptr == nullptr;
-          });
-
-        // Return early if no available space in array
-        if (it == instances.end()) {
-            return;
-        }
-        it->pin = pin;
-        it->ptr = this;
-    }
-
-    /**
-     * @brief Removes instance of class from registered list.
-     *
-     * @param ptr Pointer to the instance to remove.
-     */
-    void deregisterPin(PinChangeBase* ptr)
-    {
-        auto it = std::find_if(instances.begin(),
-                               instances.end(),
-                               [this](RegisteredPin registeredPin) {
-                                   return registeredPin.ptr == this;
-                               });
-        if (it != instances.end()) {
-            it->pin = UINT16_MAX;
-            it->ptr = nullptr;
-        }
-    }
-
-    /**
-     * @brief Array of registered pins and the associated class instances.
-     *
-     * If static variables are not declared inline, they must be initialized
-     * elsewhere.
-     */
-    static inline std::array<RegisteredPin, pinChangeCount> instances = {};
+    int pin = 0;
+    InterruptHandler handler;
+    inline bool registered() const { return handler.isConnected(); }
 };
+
+using RegisteredPinSpan = std::span<RegisteredPin>;
+
+/**
+ * @brief
+ *
+ * @param pin
+ * @return true
+ * @return false
+ */
+inline bool isRegistered(const RegisteredPinSpan& registeredPins, int pin)
+{
+    auto it = std::find_if(registeredPins.begin(),
+                           registeredPins.end(),
+                           [pin](RegisteredPin registeredPin) {
+                               return registeredPin.pin == pin &&
+                                      registeredPin.registered();
+                           });
+
+    return it != registeredPins.end();
+}
+
+/**
+ * @brief Get the Next Available object
+ *
+ * @param registeredPins
+ * @return std::optional<RegisteredPin*>
+ */
+inline std::optional<RegisteredPin*> getNextAvailable(
+  RegisteredPinSpan& registeredPins)
+{
+    auto it = std::find_if(
+      registeredPins.begin(),
+      registeredPins.end(),
+      [](RegisteredPin registeredPin) { return !registeredPin.registered(); });
+    if (it == registeredPins.end()) {
+        return std::nullopt;
+    }
+    return std::make_optional(&(*it));
+}
+
+/**
+ * @brief Registers each instance of a class derived from PinChangeBase.
+ *
+ * @param pin The GPIO pin associated with the interrupt.
+ */
+template<auto Func, typename Class>
+bool registerPin(RegisteredPinSpan& registeredPins, int pin, Class* obj)
+{
+    if (isRegistered(registeredPins, pin)) {
+        return false;
+    }
+    if (!getNextAvailable(registeredPins).has_value()) {
+        return false;
+    }
+
+    auto registeredPin = getNextAvailable(registeredPins).value();
+    registeredPin->pin = pin;
+    registeredPin->handler.connect<Func>(obj);
+
+    return true;
+}
+
+template<void (*Func)()>
+bool registerPin(RegisteredPinSpan& registeredPins, int pin)
+{
+    if (isRegistered(registeredPins, pin)) {
+        return false;
+    }
+    if (!getNextAvailable(registeredPins).has_value()) {
+        return false;
+    }
+
+    auto registeredPin = getNextAvailable(registeredPins).value();
+    registeredPin->pin = pin;
+    // See https://en.cppreference.com/w/cpp/language/dependent_name.html
+    // section, "the template disambiguator for dependent names"
+    registeredPin->handler.template connect<Func>();
+
+    return true;
+}
+
+/**
+ * @brief Removes instance of class from registered list.
+ *
+ * @param pin Pin to deregister.
+ */
+inline bool deregisterPin(RegisteredPinSpan& registeredPins, int pin)
+{
+    auto it = std::find_if(
+      registeredPins.begin(),
+      registeredPins.end(),
+      [pin](RegisteredPin registeredPin) { return registeredPin.pin == pin; });
+    if (it != registeredPins.end()) {
+        it->handler.disconnect();
+        return true;
+    }
+    return false;
+}
+
+/**
+ * @brief Calls the callback function associated with the pin.
+ *
+ * Use this function in interrupts.
+ *
+ * @param pin The pin associated with the pin change event.
+ */
+inline void irqDispatch(const RegisteredPinSpan& registeredPins, uint16_t pin)
+{
+    auto it = std::find_if(
+      registeredPins.begin(),
+      registeredPins.end(),
+      [pin](RegisteredPin registeredPin) { return registeredPin.pin == pin; });
+
+    if (it == registeredPins.end()) {
+        return;
+    }
+
+    it->handler();
+}
+
+/**
+ * @brief Get the number of used instances of the class.
+ *
+ * @return int
+ */
+inline int getUsedCount(const RegisteredPinSpan& registeredPins)
+{
+    int count = 0;
+    for (const auto registeredPin : registeredPins) {
+        if (registeredPin.registered()) {
+            count++;
+        }
+    }
+    return count;
+}
+}
