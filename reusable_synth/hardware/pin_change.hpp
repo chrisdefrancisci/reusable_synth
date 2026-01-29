@@ -184,4 +184,71 @@ inline int get_used_count(const RegisteredPinSpan& registeredPins)
     }
     return count;
 }
+
+/**
+ * @brief
+ * @remark See <a
+ * href="https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern">CRTP
+ * (Curiously Recurring Template Pattern)</a> for details on static polymorphism.
+ *
+ * @tparam Derived The derived class
+ */
+template<typename Derived>
+class PinChangeInterface
+{
+public:
+    PinChangeInterface(std::span<PinChange::RegisteredPin> registeredPins,
+                       uint16_t pin)
+      : registeredPins(registeredPins)
+      , pin(pin)
+      , registered(PinChange::register_pin<&Derived::callback, Derived>(
+          registeredPins,
+          pin,
+          static_cast<Derived*>(this)))
+    {
+    }
+
+    virtual ~PinChangeInterface()
+    {
+        if (registered) {
+            PinChange::deregister_pin(registeredPins, pin);
+        }
+    }
+    PinChangeInterface(const PinChangeInterface&) = delete; // Copy ctor
+    PinChangeInterface& operator=(const PinChangeInterface&) =
+      delete; // Copy assignment
+
+    // "Move" registers one object and deregisters the other
+    PinChangeInterface(PinChangeInterface&& other) noexcept // Move ctor
+    {
+        PinChange::deregister_pin(other.registeredPins, other.pin);
+        registeredPins = other.registeredPins;
+        other.registered = false;
+        pin = other.pin;
+        registered = PinChange::register_pin<&Derived::callback, Derived>(
+          registeredPins, pin, static_cast<Derived*>(this));
+    }
+    PinChangeInterface& operator=(
+      PinChangeInterface&& other) noexcept // Move assignment
+    {
+        if (this != &other) {
+            PinChange::deregister_pin(other.registeredPins, other.pin);
+            registeredPins = other.registeredPins;
+            other.registered = false;
+            pin = other.pin;
+            registered = PinChange::register_pin<&Derived::callback, Derived>(
+              registeredPins, pin, static_cast<Derived*>(this));
+        }
+        return *this;
+    }
+    int getPin() const { return pin; }
+    bool isRegistered() const { return registered; }
+    virtual void callback() = 0;
+
+private:
+    std::span<PinChange::RegisteredPin> registeredPins;
+    int pin;
+    bool registered;
+};
+
 }
