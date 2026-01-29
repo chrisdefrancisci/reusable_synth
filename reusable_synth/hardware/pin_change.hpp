@@ -2,7 +2,8 @@
  * @file pin_change.hpp
  * @author Chris DeFrancisci (chrisdefrancisci@gmail.com)
  * @brief Interface for EXTernal Interrupt/event - pin changes.
- * @todo documentation!
+ *
+ * @todo usage example
  * @date 2026-01-21
  */
 
@@ -18,6 +19,10 @@
 
 namespace PinChange {
 
+/**
+ * @brief Helper class to hold a (pin, interrupt callback) pair.
+ *
+ */
 struct RegisteredPin
 {
     int pin = 0;
@@ -70,15 +75,15 @@ inline std::optional<RegisteredPin*> get_next_available(
 }
 
 /**
- * @brief
+ * @brief Registers a pin interrupt to call a class method.
  *
- * @tparam Func
- * @tparam Class
- * @param registeredPins
- * @param pin
- * @param obj
- * @return true
- * @return false
+ * @tparam Func The class method to call.
+ * @tparam Class The type of object, can be implicitly determined.
+ * @param registeredPins The storage location of registered pins.
+ * @param pin The pin to register.
+ * @param obj The object of type Class to call Func.
+ * @return true If registration is successful.
+ * @return false If registration is unsuccessful.
  */
 template<auto Func, typename Class>
 bool register_pin(RegisteredPinSpan& registeredPins, int pin, Class* obj)
@@ -98,13 +103,13 @@ bool register_pin(RegisteredPinSpan& registeredPins, int pin, Class* obj)
 }
 
 /**
- * @brief
+ * @brief Registers a pin interrupt to call a free function.
  *
- * @tparam (*Func)()
- * @param registeredPins
- * @param pin
- * @return true
- * @return false
+ * @tparam (*Func)() The function to call.
+ * @param registeredPins The storage location of registered pins.
+ * @param pin The pin to register.
+ * @return true If registration is successful.
+ * @return false If registration is unsuccessful.
  */
 template<void (*Func)()>
 bool register_pin(RegisteredPinSpan& registeredPins, int pin)

@@ -33,6 +33,7 @@ public:
     TestPinChange(const TestPinChange&) = delete;            // Copy ctor
     TestPinChange& operator=(const TestPinChange&) = delete; // Copy assignment
 
+    // "Move" registers one object and deregisters the other
     TestPinChange(TestPinChange&& other) noexcept // Move ctor
     {
         PinChange::deregister_pin(other.registeredPins, other.pin);
