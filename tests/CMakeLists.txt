@@ -21,7 +21,8 @@ add_executable(
   ${CMAKE_PROJECT_NAME}
 )
 
-add_subdirectory(mocks)
+# add_subdirectory(stubs)
+# add_subdirectory(mocks)
 add_subdirectory(tests)
 
 # include_directories(${CMAKE_SOURCE_DIR}/../reusable_synth)

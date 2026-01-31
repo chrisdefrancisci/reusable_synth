@@ -1,16 +1,15 @@
-#include <gtest/gtest.h>
+#include <vector>
 
+#include <gtest/gtest.h>
 #include <reusable_synth/hardware/pin_change.hpp>
 #include <reusable_synth/utils/noncopyable.hpp>
-#include <vector>
 
 static constexpr int pinCount = 3;
 
 class TestPinChange : public PinChange::PinChangeInterface<TestPinChange>
 {
 public:
-    TestPinChange(std::span<PinChange::RegisteredPin> registeredPins,
-                  uint16_t pin)
+    TestPinChange(PinChange::RegisteredPinSpan registeredPins, uint16_t pin)
       : PinChange::PinChangeInterface<TestPinChange>(registeredPins, pin)
       , count(0)
     {

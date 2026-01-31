@@ -186,19 +186,20 @@ inline int get_used_count(const RegisteredPinSpan& registeredPins)
 }
 
 /**
- * @brief
+ * @brief Defines interface, particularly constructors, for pin change-based
+ * interrupts.
  * @remark See <a
  * href="https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern">CRTP
- * (Curiously Recurring Template Pattern)</a> for details on static polymorphism.
+ * (Curiously Recurring Template Pattern)</a> for details on static
+ * polymorphism.
  *
- * @tparam Derived The derived class
+ * @tparam Derived The derived class, which implements the callback function.
  */
 template<typename Derived>
 class PinChangeInterface
 {
 public:
-    PinChangeInterface(std::span<PinChange::RegisteredPin> registeredPins,
-                       uint16_t pin)
+    PinChangeInterface(RegisteredPinSpan registeredPins, uint16_t pin)
       : registeredPins(registeredPins)
       , pin(pin)
       , registered(PinChange::register_pin<&Derived::callback, Derived>(
@@ -246,7 +247,7 @@ public:
     virtual void callback() = 0;
 
 private:
-    std::span<PinChange::RegisteredPin> registeredPins;
+    RegisteredPinSpan registeredPins;
     int pin;
     bool registered;
 };
