@@ -28,7 +28,7 @@ TEST(TaskTest, TaskExecutesAfterInterval)
     ASSERT_EQ(setTime(millis(0)), millis(0));
 
     // Create task that runs every 100ms with tick source
-    TaskControlBlock<millis, std::function<void()>> task(
+    TaskControlBlock<millis, void (*)()> task(
       test_task, getTime, millis(100), millis(0));
 
     // Should run immediately (offset = 0)
@@ -56,7 +56,7 @@ TEST(TaskTest, TaskWithOffset)
     ASSERT_EQ(setTime(millis(0)), millis(0));
 
     // Create task with 50ms offset
-    TaskControlBlock<millis, std::function<void()>> task(
+    TaskControlBlock<millis, void (*)()> task(
       test_task, getTime, millis(100), millis(50));
 
     // Should NOT run immediately (has offset)
@@ -68,3 +68,7 @@ TEST(TaskTest, TaskWithOffset)
     EXPECT_TRUE(task.execute());
     EXPECT_EQ(task_run_count, 1);
 }
+
+// TODO: more varieties of tasks - member functions, lambdas, etc.
+
+// TODO: test for scheduler

@@ -1,4 +1,4 @@
-#include <vector>
+#include <array>
 
 #include <gtest/gtest.h>
 #include <reusable_synth/hardware/pin_change.hpp>
