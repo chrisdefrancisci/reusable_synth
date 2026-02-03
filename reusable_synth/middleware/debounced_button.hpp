@@ -53,13 +53,3 @@ private:
     TickType debounceInterval;
     std::function<void()> edgeCallback;
 };
-
-class DebouncedButtonBidirectional
-{
-public:
-    void registerRisingEdgeCallback(std::function<void()> cb) {}
-    void registerFallingEdgeCallback(std::function<void()> cb) {}
-    std::chrono::milliseconds getTimeSinceEdge() const { return {}; }
-
-private:
-};
