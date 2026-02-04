@@ -11,4 +11,5 @@ target_sources(${CMAKE_PROJECT_NAME}
             ${CMAKE_CURRENT_SOURCE_DIR}
         FILES 
             task.hpp
+            wavetable_osc.hpp
 )
