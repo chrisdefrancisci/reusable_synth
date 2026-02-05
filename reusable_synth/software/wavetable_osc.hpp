@@ -7,10 +7,23 @@
 
 #pragma once
 
+#include <iostream>
 #include <span>
 
-// TODO: ensure template is even
-// see https://learnmoderncpp.com/2023/09/03/concepts-101/
+/**
+ * @brief Creates a compile-time square wave.
+ *
+ * @todo: could probably find a cleaner way than passing in min and max based on
+ * whether or not type is int or float.
+ *
+ * @remarks This is inappropriate for audio due to aliasing, need virtual analog
+ * square wave.
+ *
+ * @tparam T
+ * @tparam Period
+ * @tparam min
+ * @tparam max
+ */
 template<typename T, int Period, int min = -1, int max = 1>
 struct SquareWavetable
 {
@@ -33,6 +46,21 @@ struct SquareWavetable
     T data[Period];
 };
 
+template<typename T, int Period, int min = -1, int max = 1>
+struct RampWavetable
+{
+    constexpr RampWavetable()
+      : data()
+    {
+        T step = (T(max) - T(min)) / (T(Period));
+        for (int i = 0; i < Period; i++) {
+            data[i] = min + T(i) * step;
+        }
+    }
+    T data[Period];
+};
+
+
 // TODO: if first sample == last sample, we can optimize checking the indices
 // see https://juce.com/tutorials/tutorial_wavetable_synth/
 template<typename T>
@@ -48,7 +76,7 @@ public:
 
     void setFrequency(float frequency, float sampleRate)
     {
-        delta = frequency * float(wavetable.size()) / sampleRate;
+        delta = float(wavetable.size()) * frequency / sampleRate;
     }
 
     void increment(T& out)
@@ -56,9 +84,9 @@ public:
         auto index0 = (unsigned int)fractionalIndex;
         auto index1 =
           index0 + 1 == wavetable.size() ? (unsigned int)0 : index0 + 1;
-        float dx = float(index1) - fractionalIndex;
-        T dy = wavetable[index1] - wavetable[index0];
-        out = wavetable[index0] + dy / dx;
+        float frac = fractionalIndex - float(index0);
+        out =
+          wavetable[index0] + frac * (wavetable[index1] - wavetable[index0]);
         fractionalIndex += delta;
         if (fractionalIndex >= wavetable.size()) {
             fractionalIndex -= wavetable.size();
