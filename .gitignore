@@ -4,3 +4,10 @@ reusable_synth/build
 reusable_synth/.cache/
 tests/compile_commands.json
 reusable_synth/compile_commands.json
+reusable_synth/out/
+.vscode/
+build
+.cache
+.vscode/settings.json
+.vscode/settings.json
+compile_commands.json
