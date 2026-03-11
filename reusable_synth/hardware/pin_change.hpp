@@ -15,7 +15,6 @@
 #include <span>
 
 #include <reusable_synth/hardware/interrupt_handler.hpp>
-#include <reusable_synth/utils/noncopyable.hpp>
 
 namespace PinChange {
 

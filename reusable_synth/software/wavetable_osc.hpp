@@ -7,14 +7,14 @@
 
 #pragma once
 
-#include <iostream>
+#include <cmath>
 #include <span>
 
 /**
  * @brief Creates a compile-time square wave.
  *
  * @todo: could probably find a cleaner way than passing in min and max based on
- * whether or not type is int or float.
+ * whether or not type iand not convert
  *
  * @remarks This is inappropriate for audio due to aliasing, need virtual analog
  * square wave.
@@ -60,6 +60,7 @@ struct RampWavetable
     T data[Period];
 };
 
+// TODO define constexpr virtual analog table creation
 
 // TODO: if first sample == last sample, we can optimize checking the indices
 // see https://juce.com/tutorials/tutorial_wavetable_synth/

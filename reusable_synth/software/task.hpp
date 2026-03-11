@@ -199,6 +199,7 @@ private:
  * a task is "starved".
  *
  * @todo Replace std::find_if with a loop.
+ * @todo Determine if task timing is not met
  *
  * @tparam N The number of tasks.
  * @tparam TickType The timue unit used

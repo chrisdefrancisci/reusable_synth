@@ -14,6 +14,9 @@
  * interrupt.
  * @todo usage example
  */
+
+#pragma once
+
 class InterruptHandler
 {
 public:
@@ -58,7 +61,7 @@ public:
     /**
      * @brief Calls the callback.
      */
-    void operator()() const
+    inline void operator()() const
     {
         if (callback.func) {
             callback.func(callback.obj);
