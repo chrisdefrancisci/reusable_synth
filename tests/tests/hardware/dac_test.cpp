@@ -25,7 +25,8 @@ TEST(DacTest, OutputSizeMustBeDoubleInputSize)
     // Note that template argument deduction cannot happen if implicit
     // type conversion needs to occur first - i.e., in this case we must convert
     // to span and then template argument deduction can hapen
-    Dac dac(std::span(computedData), std::span(dacData), convert);
+    // TODO: this is is ugly as sin, there must be a better way
+    Dac dac(computedData, dacData, convert);
 }
 
 // TEST(DacTest, WriteToDac)
@@ -42,7 +43,7 @@ TEST(DacTest, ChangeDacPtr)
             data = value;
         }
     };
-    Dac dac(std::span(computedData), std::span(dacData), convert);
+    Dac dac(computedData, dacData, convert);
 
     InterruptHandler halfCompleteCallback, completeCallback;
     halfCompleteCallback

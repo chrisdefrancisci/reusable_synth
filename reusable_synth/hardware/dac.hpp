@@ -82,3 +82,12 @@ private:
     CallbackType callbackFlag;
     void (*convertAndCheck)(DacType& out, const ComputationType& in);
 };
+
+// Deduction guide, see
+// https://stackoverflow.com/questions/40951697/what-are-template-deduction-guides-and-when-should-we-use-them
+// https://en.cppreference.com/w/cpp/language/class_template_argument_deduction.html
+template<typename ComputationType, typename DacType, size_t inputSize>
+Dac(std::array<ComputationType, inputSize>,
+    std::array<DacType, inputSize * 2>,
+    void (*convertAndCheck)(DacType& out, const ComputationType& in))
+  -> Dac<ComputationType, DacType, inputSize>;
