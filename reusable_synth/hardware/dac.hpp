@@ -32,15 +32,15 @@ public:
             callbackFlag = CallbackType::None;
             auto in = inputData.begin();
             auto out = outputData.begin();
-            auto inEnd = in + inputData.size() / 2;
-            auto outEnd = out + inputData.size() / 2;
+            auto inEnd = in + inputData.size();
+            auto outEnd = out + inputData.size();
             for (; in != inEnd && out != outEnd; in++, out++) {
                 convertAndCheck(*out, *in);
             }
         } else if (callbackFlag == CallbackType::FullComplete) {
             callbackFlag = CallbackType::None;
-            auto in = inputData.begin() + inputData.size() / 2;
-            auto out = outputData.begin() + inputData.size() / 2;
+            auto in = inputData.begin();
+            auto out = outputData.begin() + inputData.size();
             auto inEnd = inputData.end();
             auto outEnd = outputData.end();
             for (; in != inEnd && out != outEnd; in++, out++) {
