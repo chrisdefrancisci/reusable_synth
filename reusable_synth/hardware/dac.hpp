@@ -11,10 +11,27 @@
 
 #include <reusable_synth/hardware/interrupt_handler.hpp>
 
+/**
+ * @brief
+ *
+ * @todo documentation
+ * @todo switch params so everything is out, in
+ *
+ * @tparam ComputationType
+ * @tparam DacType
+ * @tparam inputSize
+ */
 template<typename ComputationType, typename DacType, size_t inputSize>
 class Dac
 {
 public:
+    /**
+     * @brief Construct a new Dac object
+     *
+     * @param inputData
+     * @param outputData
+     * @param convertAndCheck
+     */
     Dac(std::span<ComputationType, inputSize> inputData,
         std::span<DacType, inputSize * 2> outputData,
         void (*convertAndCheck)(DacType& out, const ComputationType& in))
@@ -79,8 +96,8 @@ private:
         HalfComplete,
         FullComplete
     };
-    CallbackType callbackFlag;
     void (*convertAndCheck)(DacType& out, const ComputationType& in);
+    CallbackType callbackFlag;
 };
 
 // Deduction guide, see
@@ -89,5 +106,17 @@ private:
 template<typename ComputationType, typename DacType, size_t inputSize>
 Dac(std::array<ComputationType, inputSize>,
     std::array<DacType, inputSize * 2>,
+    void (*convertAndCheck)(DacType& out, const ComputationType& in))
+  -> Dac<ComputationType, DacType, inputSize>;
+
+template<typename ComputationType, typename DacType, size_t inputSize>
+Dac(std::span<ComputationType, inputSize>,
+    std::array<DacType, inputSize * 2>,
+    void (*convertAndCheck)(DacType& out, const ComputationType& in))
+  -> Dac<ComputationType, DacType, inputSize>;
+
+template<typename ComputationType, typename DacType, size_t inputSize>
+Dac(std::array<ComputationType, inputSize>,
+    std::span<DacType, inputSize * 2>,
     void (*convertAndCheck)(DacType& out, const ComputationType& in))
   -> Dac<ComputationType, DacType, inputSize>;

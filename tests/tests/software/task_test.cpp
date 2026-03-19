@@ -70,5 +70,24 @@ TEST(TaskTest, TaskWithOffset)
 }
 
 // TODO: more varieties of tasks - member functions, lambdas, etc.
+TEST(TaskTest, LambdaTest)
+{
+    int local_task_run_count = 0;
+    ASSERT_EQ(setTime(millis(0)), millis(0));
 
+    auto lambda = [&local_task_run_count]() -> void { local_task_run_count++; };
+
+    // Create task with 50ms offset
+    TaskControlBlock<millis, decltype(lambda)> task(
+      lambda, getTime, millis(100), millis(50));
+
+    // Should NOT run immediately (has offset)
+    EXPECT_FALSE(task.execute());
+    EXPECT_EQ(local_task_run_count, 0);
+
+    // Advance to offset time
+    ASSERT_EQ(setTime(millis(50)), millis(50));
+    EXPECT_TRUE(task.execute());
+    EXPECT_EQ(local_task_run_count, 1);
+}
 // TODO: test for scheduler

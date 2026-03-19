@@ -133,7 +133,7 @@ public:
      * @param offset Initial offset from task evaluation, in order to prevent
      * tasks from regularly being scheduled at the same time.
      */
-    TaskControlBlock(TaskType& task,
+    TaskControlBlock(TaskType task,
                      const TickFuncType getTick,
                      const TickType period,
                      const TickType offset = 0)
@@ -154,17 +154,17 @@ public:
      * @param offset Initial offset from task evaluation, in order to prevent
      * tasks from regularly being scheduled at the same time.
      */
-    TaskControlBlock(TaskType&& task,
-                     const TickFuncType getTick,
-                     const TickType period,
-                     const TickType offset = 0)
-      : task(task)
-      , time(TimerType(getTick))
-      , period(period)
-      , offset(offset)
-    {
-        time.startInterval(offset);
-    }
+    // TaskControlBlock(TaskType task,
+    //                  const TickFuncType getTick,
+    //                  const TickType period,
+    //                  const TickType offset = 0)
+    //   : task(task)
+    //   , time(TimerType(getTick))
+    //   , period(period)
+    //   , offset(offset)
+    // {
+    //     time.startInterval(offset);
+    // }
 
     /**
      * @brief Execute the task if the period has elapsed.
@@ -185,7 +185,7 @@ public:
     }
 
 private:
-    TaskType& task;        // function to execute
+    TaskType task;         // function to execute
     TimerType time;        // timer to track next run
     const TickType period; // how often to run in ticks
     const TickType offset; // offset before first run
