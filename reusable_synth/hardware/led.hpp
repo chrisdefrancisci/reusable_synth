@@ -13,8 +13,6 @@
 
 /**
  * @brief This is the abstract interface class for writing to an LED.
- *
- * @todo This should be moved to reusable_synth/Hardware
  */
 class LedBase
 {
@@ -29,6 +27,20 @@ public:
      * @brief Turns LED off.
      */
     virtual void off() = 0;
+
+    /**
+     * @brief Set the Intensity of the LED (raw)
+     * @todo remove from the interface
+     * @param value Raw value 
+     */
+    virtual void setIntensity(int value) = 0;
+
+    /**
+     * @brief Sets the intensity of the LED
+     * 
+     * @param value Percentage from 0.0 to 1.0
+     */
+    virtual void setIntensity(float value) = 0;
 
     /**
      * @brief Get the range of the LED intensity
