@@ -40,6 +40,23 @@ TEST(WavetableOscTest, RampWaveAtFsOver8)
     EXPECT_THAT(out, Pointwise(FloatNear(0.001), truth));
 }
 
+TEST(WavetableOscTest, RampWaveIntAtFsOver8)
+{
+    constexpr float f_s = 44100;
+    constexpr float f_osc = f_s / 8;
+    constexpr auto rampWavetable = RampWavetable<int, 256, 0, 128>();
+
+    // WavetableOsc<float> osc(rampWavetable.data);
+    // std::array<float, 9> truth = { -1.0, -0.75, -0.5, -0.25, 0.0,
+    //                                0.25, 0.5,   0.75, -1.0 };
+    // std::array<float, 9> out;
+    // osc.setFrequency(f_osc, f_s);
+    // osc.increment(out);
+
+    // EXPECT_THAT(out, Pointwise(FloatNear(0.001), truth));
+    EXPECT_TRUE(false);
+}
+
 TEST(WavetableOscTest, SineWaveAtFsOver8)
 {
     constexpr float f_s = 44100;

@@ -46,6 +46,15 @@ struct SquareWavetable
     T data[Period];
 };
 
+/**
+ * @brief
+ *
+ * @todo for ints, if max < Period, this will always be 0
+ * @tparam T Underlying data type
+ * @tparam Period Number of samples to form one period
+ * @tparam min Min value of the ramp
+ * @tparam max (Hypothetical) max value of the ramp sampled at the discontinuity
+ */
 template<typename T, int Period, int min = -1, int max = 1>
 struct RampWavetable
 {

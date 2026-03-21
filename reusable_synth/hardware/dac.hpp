@@ -30,19 +30,23 @@ public:
      *
      * @param inputData
      * @param outputData
-     * @param convertAndCheck
+     * @param convert
      */
     Dac(std::span<ComputationType, inputSize> inputData,
         std::span<DacType, inputSize * 2> outputData,
-        void (*convertAndCheck)(DacType& out, const ComputationType& in))
+        void (*convert)(DacType& out, const ComputationType& in))
       : inputData(inputData)
       , outputData(outputData)
-      , convertAndCheck(convertAndCheck)
+      , convert(convert)
       , callbackFlag(CallbackType::FullComplete) // init to start writing data
                                                  // in the middle
     {
-        // TODO: ensure input data and output data are the same size
     }
+
+    /**
+     * @brief Copies data to the DAC buffer.
+     *
+     */
     void execute()
     {
         if (callbackFlag == CallbackType::HalfComplete) {
@@ -52,7 +56,7 @@ public:
             auto inEnd = in + inputData.size();
             auto outEnd = out + inputData.size();
             for (; in != inEnd && out != outEnd; in++, out++) {
-                convertAndCheck(*out, *in);
+                convert(*out, *in);
             }
         } else if (callbackFlag == CallbackType::FullComplete) {
             callbackFlag = CallbackType::None;
@@ -61,12 +65,12 @@ public:
             auto inEnd = inputData.end();
             auto outEnd = outputData.end();
             for (; in != inEnd && out != outEnd; in++, out++) {
-                convertAndCheck(*out, *in);
+                convert(*out, *in);
             }
-        } else {
-            // TODO: Error! we are creating data faster than it can be output
         }
     }
+
+    inline bool isReady() { return callbackFlag != CallbackType::None; }
 
     inline void setHalfCompleteFlag()
     {
@@ -78,7 +82,6 @@ public:
     }
     inline void setCompleteFlag()
     {
-
         if (callbackFlag != CallbackType::None) {
             // TODO: Error! We are outputting data faster than we can create it
         } else {
@@ -96,7 +99,7 @@ private:
         HalfComplete,
         FullComplete
     };
-    void (*convertAndCheck)(DacType& out, const ComputationType& in);
+    void (*convert)(DacType& out, const ComputationType& in);
     CallbackType callbackFlag;
 };
 
@@ -106,17 +109,17 @@ private:
 template<typename ComputationType, typename DacType, size_t inputSize>
 Dac(std::array<ComputationType, inputSize>,
     std::array<DacType, inputSize * 2>,
-    void (*convertAndCheck)(DacType& out, const ComputationType& in))
+    void (*convert)(DacType& out, const ComputationType& in))
   -> Dac<ComputationType, DacType, inputSize>;
 
 template<typename ComputationType, typename DacType, size_t inputSize>
 Dac(std::span<ComputationType, inputSize>,
     std::array<DacType, inputSize * 2>,
-    void (*convertAndCheck)(DacType& out, const ComputationType& in))
+    void (*convert)(DacType& out, const ComputationType& in))
   -> Dac<ComputationType, DacType, inputSize>;
 
 template<typename ComputationType, typename DacType, size_t inputSize>
 Dac(std::array<ComputationType, inputSize>,
     std::span<DacType, inputSize * 2>,
-    void (*convertAndCheck)(DacType& out, const ComputationType& in))
+    void (*convert)(DacType& out, const ComputationType& in))
   -> Dac<ComputationType, DacType, inputSize>;
