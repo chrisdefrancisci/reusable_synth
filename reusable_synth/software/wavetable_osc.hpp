@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cmath>
+#include <numbers>
 #include <span>
 
 /**
@@ -47,9 +48,9 @@ struct SquareWavetable
 };
 
 /**
- * @brief
+ * @brief Creates a buffer with a ramp waveform
  *
- * @todo for ints, if max < Period, this will always be 0
+ * @todo Is making the waveform constructor constexpr actually helpful?
  * @tparam T Underlying data type
  * @tparam Period Number of samples to form one period
  * @tparam min Min value of the ramp
@@ -61,7 +62,13 @@ struct RampWavetable
     constexpr RampWavetable()
       : data()
     {
-        T step = (T(max) - T(min)) / (T(Period));
+        float step = float(max - min) / float(Period);
+        for (int i = 0; i < Period; i++) {
+            data[i] = min + T(i * step);
+        }
+    }
+    T data[Period];
+};
         for (int i = 0; i < Period; i++) {
             data[i] = min + T(i) * step;
         }
@@ -115,3 +122,6 @@ private:
     float fractionalIndex;
     float delta;
 };
+
+template<typename T>
+WavetableOsc(const T*) -> WavetableOsc<T>;
