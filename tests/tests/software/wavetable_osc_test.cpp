@@ -60,11 +60,8 @@ TEST(WavetableOscTest, SineWaveAtFsOver8)
     constexpr float f_s = 44100;
     constexpr float f_osc = f_s / 8;
     constexpr int N = 32;
-    std::array<float, N> data;
-    for (int n = 0; auto& item : data) {
-        item = std::sin(std::numbers::pi_v<float> * 2.0 * n++ / N);
-    }
-    WavetableOsc<float> osc(data);
+    SineWavetable<float, N> sineWavetable;
+    WavetableOsc osc(sineWavetable.data);
 
     constexpr int N_true = 8;
     std::array<float, 9> truth;
@@ -72,24 +69,27 @@ TEST(WavetableOscTest, SineWaveAtFsOver8)
         item = std::sin(std::numbers::pi_v<float> * 2.0 * n++ / (N_true));
     }
 
-    std::array<float, 9> out;
+    decltype(truth) out;
     osc.setFrequency(f_osc, f_s);
     osc.increment(out);
 
     EXPECT_THAT(out, Pointwise(FloatNear(0.001), truth));
 }
 
-TEST(WavetableOscTest, SineWaveUndersampled)
+TEST(WavetableOscTest, SineWaveIntAtFsOver8)
 {
-    EXPECT_TRUE(false);
-}
+    constexpr float f_s = 44100;
+    constexpr float f_osc = f_s / 8;
+    constexpr int N = 32;
+    SineWavetable<int, N, 0, 255> sineWavetable;
+    WavetableOsc osc(sineWavetable.data);
 
-TEST(WavetableOscTest, SineWaveOversampled)
-{
-    EXPECT_TRUE(false);
-}
+    constexpr int N_true = 8;
+    std::array truth = { 127, 217, 255, 217, 127, 37, 0, 37, 127 };
 
-TEST(WavetableOscTest, SineWaveAtMultipleFrequencies)
-{
-    EXPECT_TRUE(false);
+    decltype(truth) out;
+    osc.setFrequency(f_osc, f_s);
+    osc.increment(out);
+
+    EXPECT_THAT(out, Pointwise(Eq(), truth));
 }

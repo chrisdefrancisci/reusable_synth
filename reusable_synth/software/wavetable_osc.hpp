@@ -14,16 +14,13 @@
 /**
  * @brief Creates a compile-time square wave.
  *
- * @todo: could probably find a cleaner way than passing in min and max based on
- * whether or not type iand not convert
- *
  * @remarks This is inappropriate for audio due to aliasing, need virtual analog
  * square wave.
  *
- * @tparam T
- * @tparam Period
- * @tparam min
- * @tparam max
+ * @tparam T Underlying data type
+ * @tparam Period Number of samples to form one period
+ * @tparam min Min value of the square
+ * @tparam max Max value of the square
  */
 template<typename T, int Period, int min = -1, int max = 1>
 struct SquareWavetable
@@ -69,8 +66,27 @@ struct RampWavetable
     }
     T data[Period];
 };
+
+/**
+ * @brief Creates a buffer with a sinusoidal waveform
+ *
+ * @todo could make constexpr sin if I install https://github.com/kthohr/gcem
+ * @todo replace min max scaling the next time I need it
+ * @tparam T Underlying data type
+ * @tparam Period Number of samples to form one period
+ * @tparam min Min value of the sine wave
+ * @tparam max Max value of the sine wave
+ */
+template<typename T, int Period, int min = -1, int max = 1>
+struct SineWavetable
+{
+    constexpr SineWavetable()
+      : data()
+    {
+        float step = float(max - min) / float(Period);
         for (int i = 0; i < Period; i++) {
-            data[i] = min + T(i) * step;
+            float raw = std::sin(std::numbers::pi_v<float> * 2.0f * i / Period);
+            data[i] = T((raw + 1.0f) * float(max - min) / 2.0f + min);
         }
     }
     T data[Period];
