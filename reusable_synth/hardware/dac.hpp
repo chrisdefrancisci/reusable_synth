@@ -70,8 +70,20 @@ public:
         }
     }
 
+    /**
+     * @brief Ready to receive new data - call to prevent creating data faster
+     * than the DAC is outputting it.
+     *
+     * @return true If data written to inputData will be copied to outputData.
+     * @return false If data written to inputData will not be copied to
+     * outputData.
+     */
     inline bool isReady() { return callbackFlag != CallbackType::None; }
 
+    /**
+     * @brief Function to call in DMA half complete IRQ handler.
+     *
+     */
     inline void setHalfCompleteFlag()
     {
         if (callbackFlag != CallbackType::None) {
@@ -80,6 +92,11 @@ public:
             callbackFlag = CallbackType::HalfComplete;
         }
     }
+
+    /**
+     * @brief Function to call in DMA complete IRQ handler.
+     *
+     */
     inline void setCompleteFlag()
     {
         if (callbackFlag != CallbackType::None) {
