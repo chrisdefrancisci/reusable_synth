@@ -117,8 +117,8 @@ public:
         auto index1 =
           index0 + 1 == wavetable.size() ? (unsigned int)0 : index0 + 1;
         float frac = fractionalIndex - float(index0);
-        out =
-          wavetable[index0] + frac * (wavetable[index1] - wavetable[index0]);
+        out = wavetable[index0] +
+              frac * (float(wavetable[index1]) - float(wavetable[index0]));
         fractionalIndex += delta;
         if (fractionalIndex >= wavetable.size()) {
             fractionalIndex -= wavetable.size();
