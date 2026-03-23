@@ -83,7 +83,6 @@ struct SineWavetable
     constexpr SineWavetable()
       : data()
     {
-        float step = float(max - min) / float(Period);
         for (int i = 0; i < Period; i++) {
             float raw = std::sin(std::numbers::pi_v<float> * 2.0f * i / Period);
             data[i] = T((raw + 1.0f) * float(max - min) / 2.0f + min);
