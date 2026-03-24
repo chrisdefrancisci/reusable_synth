@@ -14,17 +14,27 @@ static millis (*setTime)(std::optional<millis>) = setFreeFunctionValue<millis>;
 // millis mock_get_tick() { return mock_tick_count; }
 
 // Test task that counts how many times it runs
-static int task_run_count = 0;
+static int static_task_run_count = 0;
 
 void test_task()
 {
-    task_run_count++;
+    static_task_run_count++;
 }
+
+class MockFunctor
+{
+public:
+    void operator()() { count++; }
+    int getCount() { return count; }
+
+private:
+    int count = 0;
+};
 
 TEST(TaskTest, TaskExecutesAfterInterval)
 {
     // Reset test state
-    task_run_count = 0;
+    static_task_run_count = 0;
     ASSERT_EQ(setTime(millis(0)), millis(0));
 
     // Create task that runs every 100ms with tick source
@@ -33,26 +43,26 @@ TEST(TaskTest, TaskExecutesAfterInterval)
 
     // Should run immediately (offset = 0)
     EXPECT_TRUE(task.execute());
-    EXPECT_EQ(task_run_count, 1);
+    EXPECT_EQ(static_task_run_count, 1);
 
     // Should not run again immediately
     EXPECT_FALSE(task.execute());
-    EXPECT_EQ(task_run_count, 1);
+    EXPECT_EQ(static_task_run_count, 1);
 
     // Advance time by 50ms - still not ready
     ASSERT_EQ(setTime(millis(50)), millis(50));
     EXPECT_FALSE(task.execute());
-    EXPECT_EQ(task_run_count, 1);
+    EXPECT_EQ(static_task_run_count, 1);
 
     // Advance time to 100ms - should run now
     ASSERT_EQ(setTime(millis(100)), millis(100));
     EXPECT_TRUE(task.execute());
-    EXPECT_EQ(task_run_count, 2);
+    EXPECT_EQ(static_task_run_count, 2);
 }
 
 TEST(TaskTest, TaskWithOffset)
 {
-    task_run_count = 0;
+    static_task_run_count = 0;
     ASSERT_EQ(setTime(millis(0)), millis(0));
 
     // Create task with 50ms offset
@@ -61,15 +71,14 @@ TEST(TaskTest, TaskWithOffset)
 
     // Should NOT run immediately (has offset)
     EXPECT_FALSE(task.execute());
-    EXPECT_EQ(task_run_count, 0);
+    EXPECT_EQ(static_task_run_count, 0);
 
     // Advance to offset time
     ASSERT_EQ(setTime(millis(50)), millis(50));
     EXPECT_TRUE(task.execute());
-    EXPECT_EQ(task_run_count, 1);
+    EXPECT_EQ(static_task_run_count, 1);
 }
 
-// TODO: more varieties of tasks - member functions, lambdas, etc.
 TEST(TaskTest, LambdaTest)
 {
     int local_task_run_count = 0;
@@ -90,4 +99,23 @@ TEST(TaskTest, LambdaTest)
     EXPECT_TRUE(task.execute());
     EXPECT_EQ(local_task_run_count, 1);
 }
-// TODO: test for scheduler
+
+TEST(TaskTest, FunctorTest)
+{
+    ASSERT_EQ(setTime(millis(0)), millis(0));
+
+    MockFunctor func;
+
+    // Create task that runs every 100ms with tick source
+    TaskControlBlock<millis, MockFunctor> task(
+      func, getTime, millis(100), millis(0));
+
+    // Should run immediately (offset = 0)
+    EXPECT_TRUE(task.execute());
+    EXPECT_EQ(func.getCount(), 1);
+
+    // Advance time to 100ms - should run now
+    ASSERT_EQ(setTime(millis(100)), millis(100));
+    EXPECT_TRUE(task.execute());
+    EXPECT_EQ(func.getCount(), 2);
+}
