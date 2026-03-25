@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <chrono>
 #include <functional>
 
 #include <reusable_synth/hardware/pin_change.hpp>
