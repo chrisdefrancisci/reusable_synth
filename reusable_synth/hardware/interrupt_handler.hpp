@@ -60,7 +60,7 @@ public:
      */
     void operator()() const
     {
-        if (callback.func) {
+        if (callback.func != nullptr) {
             callback.func(callback.obj);
         }
     }
