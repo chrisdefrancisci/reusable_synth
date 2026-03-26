@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
-#include <concepts>
 #include <memory>
 #include <type_traits>
 
@@ -110,12 +109,10 @@ public:
 /**
  * @brief Periodically completes a task using a timer.
  *
- * @todo Can we require callable object using requires(std::invocable) ?
- *
  * @tparam TickType The type to use for the timer.
  * @tparam TaskType The callable object to execute.
  */
-template<typename TickType, typename TaskType>
+template<typename TickType, typename Callable>
 class TaskControlBlock : public TaskControlBlockInterface<TickType>
 {
 public:
@@ -133,28 +130,7 @@ public:
      * @param offset Initial offset from task evaluation, in order to prevent
      * tasks from regularly being scheduled at the same time.
      */
-    TaskControlBlock(TaskType& task,
-                     const TickFuncType getTick,
-                     const TickType period,
-                     const TickType offset = 0)
-      : task(task)
-      , time(TimerType(getTick))
-      , period(period)
-      , offset(offset)
-    {
-        time.startInterval(offset);
-    }
-
-    /**
-     * @brief Construct a new Task Control Block object
-     *
-     * @param task The task to update periodically. Can take rvalue.
-     * @param getTick The current tick callback function.
-     * @param period The task evaluation period.
-     * @param offset Initial offset from task evaluation, in order to prevent
-     * tasks from regularly being scheduled at the same time.
-     */
-    TaskControlBlock(TaskType&& task,
+    TaskControlBlock(Callable& task,
                      const TickFuncType getTick,
                      const TickType period,
                      const TickType offset = 0)
@@ -175,30 +151,98 @@ public:
     bool execute() override
     {
         if (time.timeout()) {
-            time.startInterval(
-              period); // restart timer for 'cycle' ticks from now
+            // restart timer for 'cycle' ticks from now
+            time.startInterval(period);
             task();
-
             return true;
         }
         return false;
     }
 
 private:
-    TaskType& task;        // function to execute
+    Callable& task; // function to execute
+
     TimerType time;        // timer to track next run
     const TickType period; // how often to run in ticks
     const TickType offset; // offset before first run
 };
 
 /**
+ * @brief TaskControlBlock specialization for void(*)().
+ *
+ * @tparam TickType The type to use for the timer.
+ */
+template<typename TickType>
+class TaskControlBlock<TickType, void (*)()>
+  : public TaskControlBlockInterface<TickType>
+{
+public:
+    /** Helper for timer template. */
+    using TimerType = Timer<TickType>;
+    /** Supplied tick callback must be acceptable to Timer class. */
+    using TickFuncType = typename Timer<TickType>::TickFuncType;
+
+    /**
+     * @brief Construct a new Task Control Block object
+     *
+     * @param task The task to update periodically.
+     * @param getTick The current tick callback function.
+     * @param period The task evaluation period.
+     * @param offset Initial offset from task evaluation, in order to prevent
+     * tasks from regularly being scheduled at the same time.
+     */
+    TaskControlBlock(void (*task)(),
+                     const TickFuncType getTick,
+                     const TickType period,
+                     const TickType offset = 0)
+      : task(task)
+      , time(TimerType(getTick))
+      , period(period)
+      , offset(offset)
+    {
+        time.startInterval(offset);
+    }
+
+    /**
+     * @brief Execute the task if the period has elapsed.
+     *
+     * @return true If the task executed.
+     * @return false If the task did not execute.
+     */
+    bool execute() override
+    {
+        if (time.timeout()) {
+            // restart timer for 'cycle' ticks from now
+            time.startInterval(period);
+            task();
+            return true;
+        }
+        return false;
+    }
+
+private:
+    void (*task)(); // function to execute
+
+    TimerType time;        // timer to track next run
+    const TickType period; // how often to run in ticks
+    const TickType offset; // offset before first run
+};
+
+template<typename TickType>
+TaskControlBlock(void (*)(),
+                 const typename Timer<TickType>::TickFuncType,
+                 const TickType,
+                 const TickType) -> TaskControlBlock<TickType, void (*)()>;
+
+/**
  * @brief Runs tasks in infinite loop; does not return.
  *
- * This wraps std::find_if to form a simple priority scheduler - the items first
- * in the supplied array have higher priority. Note that there is no checking if
- * a task is "starved".
+ * This wraps std::find_if to form a simple priority scheduler - the items
+ * first in the supplied array have higher priority. Note that there is no
+ * checking if a task is "starved".
  *
  * @todo Replace std::find_if with a loop.
+ * @todo Determine if task timing is not met
  *
  * @tparam N The number of tasks.
  * @tparam TickType The timue unit used

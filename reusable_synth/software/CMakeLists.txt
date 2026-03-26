@@ -4,4 +4,5 @@ target_sources(ReusableSynthInterface
         FILE_SET HEADERS 
         FILES 
             task.hpp
+            wavetable_osc.hpp
 )
