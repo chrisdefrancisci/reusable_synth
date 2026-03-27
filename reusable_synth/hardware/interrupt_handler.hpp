@@ -31,8 +31,8 @@ public:
     void connect(Class* obj)
     {
         callback.obj = obj;
-        callback.func = [](void* data) {
-            Class* obj = static_cast<Class*>(data);
+        callback.func = [](void* data) -> auto {
+            auto* obj = static_cast<Class*>(data);
             (obj->*Func)();
         };
     }
@@ -46,7 +46,7 @@ public:
     void connect()
     {
         callback.obj = nullptr;
-        callback.func = [](void* data) { Func(); };
+        callback.func = [](void* data) -> auto { Func(); };
     }
 
     /**
@@ -61,7 +61,7 @@ public:
     /**
      * @brief Calls the callback.
      */
-    inline void operator()() const
+    void operator()() const
     {
         if (callback.func != nullptr) {
             callback.func(callback.obj);
@@ -74,7 +74,10 @@ public:
      * @return true If func != nullptr.
      * @return false If func == nullptr.
      */
-    bool isConnected() const { return callback.func != nullptr; }
+    [[nodiscard]] auto isConnected() const -> bool
+    {
+        return callback.func != nullptr;
+    }
 
 private:
     struct Callback

@@ -41,7 +41,7 @@ struct SquareWavetable
             data[i] = value;
         }
     }
-    T data[Period];
+    std::array<T, Period> data;
 };
 
 /**
@@ -61,10 +61,10 @@ struct RampWavetable
     {
         float step = float(max - min) / float(Period);
         for (int i = 0; i < Period; i++) {
-            data[i] = min + T(i * step);
+            data[i] = min + T((float)i * step);
         }
     }
-    T data[Period];
+    std::array<T, Period> data;
 };
 
 /**
@@ -84,11 +84,12 @@ struct SineWavetable
       : data()
     {
         for (int i = 0; i < Period; i++) {
-            float raw = std::sin(std::numbers::pi_v<float> * 2.0f * i / Period);
-            data[i] = T((raw + 1.0f) * float(max - min) / 2.0f + min);
+            float raw =
+              std::sin(std::numbers::pi_v<float> * 2.0F * (float)i / Period);
+            data[i] = T(((raw + 1.0F) * float(max - min) / 2.0F) + min);
         }
     }
-    T data[Period];
+    std::array<T, Period> data;
 };
 
 // TODO define constexpr virtual analog table creation
@@ -101,8 +102,6 @@ class WavetableOsc
 public:
     explicit WavetableOsc(const std::span<const T> wavetable)
       : wavetable(wavetable)
-      , fractionalIndex(0.0)
-      , delta(0)
     {
     }
 
@@ -118,7 +117,7 @@ public:
           index0 + 1 == wavetable.size() ? (unsigned int)0 : index0 + 1;
         float frac = fractionalIndex - float(index0);
         out = wavetable[index0] +
-              frac * (float(wavetable[index1]) - float(wavetable[index0]));
+              (frac * (float(wavetable[index1]) - float(wavetable[index0])));
         fractionalIndex += delta;
         if (fractionalIndex >= wavetable.size()) {
             fractionalIndex -= wavetable.size();
@@ -133,10 +132,13 @@ public:
     }
 
 private:
-    const std::span<const T> wavetable;
-    float fractionalIndex;
-    float delta;
+    std::span<const T> wavetable;
+    float fractionalIndex{};
+    float delta{};
 };
 
 template<typename T>
 WavetableOsc(const T*) -> WavetableOsc<T>;
+
+template<typename T, size_t N>
+WavetableOsc(std::array<T, N>) -> WavetableOsc<T>;

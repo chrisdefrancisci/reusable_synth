@@ -39,7 +39,7 @@ public:
     }
 
     void registerEdgeCallback(std::function<void()> cb) { edgeCallback = cb; }
-    virtual void callback() override
+    void callback() override
     {
         if (debounceTimer.timeout() && edgeCallback != nullptr) {
             debounceTimer.startInterval(debounceInterval);

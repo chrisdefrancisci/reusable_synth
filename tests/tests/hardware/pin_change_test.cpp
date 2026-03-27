@@ -11,15 +11,14 @@ class TestPinChange : public PinChange::PinChangeInterface<TestPinChange>
 public:
     TestPinChange(PinChange::RegisteredPinSpan registeredPins, uint16_t pin)
       : PinChange::PinChangeInterface<TestPinChange>(registeredPins, pin)
-      , count(0)
     {
     }
 
-    int getCount() const { return count; }
-    virtual void callback() override { count++; }
+    [[nodiscard]] auto getCount() const -> int { return count; }
+    void callback() override { count++; }
 
 private:
-    int count;
+    int count{};
 };
 
 TEST(PinChangeTest, registerPinOnConstruction)
@@ -41,14 +40,13 @@ TEST(PinChangeTest, registerUntilFull)
     std::vector<TestPinChange> pins;
     for (int i = 0; i < pinCount; i++) {
         EXPECT_EQ(PinChange::get_used_count(registeredPins), i);
-        pins.push_back(TestPinChange(registeredPins, i));
-        // pins.emplace_back(registeredPins, i);
+        pins.emplace_back(registeredPins, i);
         EXPECT_TRUE(pins.back().isRegistered());
         EXPECT_TRUE(PinChange::is_registered(registeredPins, i));
     }
     EXPECT_EQ(PinChange::get_used_count(registeredPins), pinCount);
     // No more objects can be registered
-    pins.push_back(TestPinChange(registeredPins, pinCount));
+    pins.emplace_back(registeredPins, pinCount);
     EXPECT_EQ(PinChange::get_used_count(registeredPins), pinCount);
     EXPECT_FALSE(
       PinChange::is_registered(registeredPins, pins.back().getPin()));
@@ -71,9 +69,9 @@ TEST(PinChangeTest, deregisterPinOnDestruction)
     std::array<PinChange::RegisteredPin, pinCount> registeredPins;
     int pinNum = 0;
     EXPECT_EQ(PinChange::get_used_count(registeredPins), 0);
-    auto pinToBeDeleted = new TestPinChange(registeredPins, pinNum);
+    auto* pinToBeDeleted = new TestPinChange(registeredPins, pinNum); // NOLINT
     EXPECT_EQ(PinChange::get_used_count(registeredPins), 1);
-    delete pinToBeDeleted;
+    delete pinToBeDeleted; // NOLINT
     EXPECT_EQ(PinChange::get_used_count(registeredPins), 0);
     // Ensure deregistration is completed by registering that pin again
     TestPinChange pinReregistered(registeredPins, pinNum);
@@ -97,7 +95,7 @@ TEST(PinChangeTest, dispatchCallsMultipleCallbacks)
     std::array<PinChange::RegisteredPin, pinCount> registeredPins;
     std::vector<TestPinChange> pins;
     for (int i = 0; i < pinCount; i++) {
-        pins.push_back(TestPinChange(registeredPins, i));
+        pins.emplace_back(registeredPins, i);
     }
 
     // Call each callback some different number of times (pin # + 1)
@@ -107,8 +105,7 @@ TEST(PinChangeTest, dispatchCallsMultipleCallbacks)
         }
     }
 
-    int i = 0;
-    for (const auto& pin : pins) {
+    for (int i = 0; const auto& pin : pins) {
         i++;
         EXPECT_EQ(pin.getCount(), i);
     }

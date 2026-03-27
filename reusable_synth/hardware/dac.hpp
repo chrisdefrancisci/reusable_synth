@@ -51,21 +51,21 @@ public:
     {
         if (callbackFlag == CallbackType::HalfComplete) {
             callbackFlag = CallbackType::None;
-            auto in = inputData.begin();
-            auto out = outputData.begin();
-            auto inEnd = in + inputData.size();
-            auto outEnd = out + inputData.size();
-            for (; in != inEnd && out != outEnd; in++, out++) {
-                convert(*out, *in);
+            auto inIter = inputData.begin();
+            auto outIter = outputData.begin();
+            auto inEnd = inIter + inputData.size();
+            auto outEnd = outIter + inputData.size();
+            for (; inIter != inEnd && outIter != outEnd; inIter++, outIter++) {
+                convert(*outIter, *inIter);
             }
         } else if (callbackFlag == CallbackType::FullComplete) {
             callbackFlag = CallbackType::None;
-            auto in = inputData.begin();
-            auto out = outputData.begin() + inputData.size();
+            auto inIter = inputData.begin();
+            auto outIter = outputData.begin() + inputData.size();
             auto inEnd = inputData.end();
             auto outEnd = outputData.end();
-            for (; in != inEnd && out != outEnd; in++, out++) {
-                convert(*out, *in);
+            for (; inIter != inEnd && outIter != outEnd; inIter++, outIter++) {
+                convert(*outIter, *inIter);
             }
         }
     }
@@ -78,13 +78,13 @@ public:
      * @return false If data written to inputData will not be copied to
      * outputData.
      */
-    inline bool isReady() { return callbackFlag != CallbackType::None; }
+    auto isReady() -> bool { return callbackFlag != CallbackType::None; }
 
     /**
      * @brief Function to call in DMA half complete IRQ handler.
      *
      */
-    inline void setHalfCompleteFlag()
+    void setHalfCompleteFlag()
     {
         if (callbackFlag != CallbackType::None) {
             // TODO: Error! We are outputting data faster than we can create it
@@ -97,7 +97,7 @@ public:
      * @brief Function to call in DMA complete IRQ handler.
      *
      */
-    inline void setCompleteFlag()
+    void setCompleteFlag()
     {
         if (callbackFlag != CallbackType::None) {
             // TODO: Error! We are outputting data faster than we can create it

@@ -25,7 +25,7 @@ class MockFunctor
 {
 public:
     void operator()() { count++; }
-    int getCount() { return count; }
+    [[nodiscard]] auto getCount() const -> int { return count; }
 
 private:
     int count = 0;

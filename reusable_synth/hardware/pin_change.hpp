@@ -26,7 +26,10 @@ struct RegisteredPin
 {
     int pin = 0;
     InterruptHandler handler;
-    inline bool isRegistered() const { return handler.isConnected(); }
+    [[nodiscard]] auto isRegistered() const -> bool
+    {
+        return handler.isConnected();
+    }
 };
 
 using RegisteredPinSpan = std::span<RegisteredPin>;
@@ -40,16 +43,15 @@ using RegisteredPinSpan = std::span<RegisteredPin>;
  * @return false if pin is not in the set or doesn't have an active interrupt
  * handler.
  */
-inline bool is_registered(const RegisteredPinSpan& registeredPins, int pin)
+inline auto is_registered(const RegisteredPinSpan& registeredPins, int pin)
+  -> bool
 {
-    auto it = std::find_if(registeredPins.begin(),
-                           registeredPins.end(),
-                           [pin](RegisteredPin registeredPin) {
-                               return registeredPin.pin == pin &&
-                                      registeredPin.isRegistered();
-                           });
+    auto iter = std::ranges::find_if(
+      registeredPins, [pin](RegisteredPin registeredPin) -> bool {
+          return registeredPin.pin == pin && registeredPin.isRegistered();
+      });
 
-    return it != registeredPins.end();
+    return iter != registeredPins.end();
 }
 
 /**
@@ -59,18 +61,17 @@ inline bool is_registered(const RegisteredPinSpan& registeredPins, int pin)
  * @return std::optional<RegisteredPin*> An address in registeredPins or
  * std::nullopt.
  */
-inline std::optional<RegisteredPin*> get_next_available(
-  RegisteredPinSpan& registeredPins)
+inline auto get_next_available(RegisteredPinSpan& registeredPins)
+  -> std::optional<RegisteredPin*>
 {
-    auto it = std::find_if(registeredPins.begin(),
-                           registeredPins.end(),
-                           [](RegisteredPin registeredPin) {
-                               return !registeredPin.isRegistered();
-                           });
-    if (it == registeredPins.end()) {
+    auto iter = std::ranges::find_if(registeredPins,
+                                     [](RegisteredPin registeredPin) -> bool {
+                                         return !registeredPin.isRegistered();
+                                     });
+    if (iter == registeredPins.end()) {
         return std::nullopt;
     }
-    return std::make_optional(&(*it));
+    return std::make_optional(&(*iter));
 }
 
 /**
@@ -85,7 +86,8 @@ inline std::optional<RegisteredPin*> get_next_available(
  * @return false If registration is unsuccessful.
  */
 template<auto Func, typename Class>
-bool register_pin(RegisteredPinSpan& registeredPins, int pin, Class* obj)
+auto register_pin(RegisteredPinSpan& registeredPins, int pin, Class* obj)
+  -> bool
 {
     if (is_registered(registeredPins, pin)) {
         return false;
@@ -94,7 +96,7 @@ bool register_pin(RegisteredPinSpan& registeredPins, int pin, Class* obj)
         return false;
     }
 
-    auto registeredPin = get_next_available(registeredPins).value();
+    auto* registeredPin = get_next_available(registeredPins).value();
     registeredPin->pin = pin;
     registeredPin->handler.connect<Func>(obj);
 
@@ -111,7 +113,7 @@ bool register_pin(RegisteredPinSpan& registeredPins, int pin, Class* obj)
  * @return false If registration is unsuccessful.
  */
 template<void (*Func)()>
-bool register_pin(RegisteredPinSpan& registeredPins, int pin)
+auto register_pin(RegisteredPinSpan& registeredPins, int pin) -> bool
 {
     if (is_registered(registeredPins, pin)) {
         return false;
@@ -120,7 +122,7 @@ bool register_pin(RegisteredPinSpan& registeredPins, int pin)
         return false;
     }
 
-    auto registeredPin = get_next_available(registeredPins).value();
+    auto* registeredPin = get_next_available(registeredPins).value();
     registeredPin->pin = pin;
     // See https://en.cppreference.com/w/cpp/language/dependent_name.html
     // section, "the template disambiguator for dependent names"
@@ -134,14 +136,14 @@ bool register_pin(RegisteredPinSpan& registeredPins, int pin)
  *
  * @param pin Pin to deregister.
  */
-inline bool deregister_pin(RegisteredPinSpan& registeredPins, int pin)
+inline auto deregister_pin(RegisteredPinSpan& registeredPins, int pin) -> bool
 {
-    auto it = std::find_if(
-      registeredPins.begin(),
-      registeredPins.end(),
-      [pin](RegisteredPin registeredPin) { return registeredPin.pin == pin; });
-    if (it != registeredPins.end()) {
-        it->handler.disconnect();
+    auto iter = std::ranges::find_if(
+      registeredPins, [pin](RegisteredPin registeredPin) -> bool {
+          return registeredPin.pin == pin;
+      });
+    if (iter != registeredPins.end()) {
+        iter->handler.disconnect();
         return true;
     }
     return false;
@@ -156,16 +158,16 @@ inline bool deregister_pin(RegisteredPinSpan& registeredPins, int pin)
  */
 inline void irq_dispatch(const RegisteredPinSpan& registeredPins, uint16_t pin)
 {
-    auto it = std::find_if(
-      registeredPins.begin(),
-      registeredPins.end(),
-      [pin](RegisteredPin registeredPin) { return registeredPin.pin == pin; });
+    auto iter = std::ranges::find_if(
+      registeredPins, [pin](RegisteredPin registeredPin) -> bool {
+          return registeredPin.pin == pin;
+      });
 
-    if (it == registeredPins.end()) {
+    if (iter == registeredPins.end()) {
         return;
     }
 
-    it->handler();
+    iter->handler();
 }
 
 /**
@@ -173,7 +175,7 @@ inline void irq_dispatch(const RegisteredPinSpan& registeredPins, uint16_t pin)
  *
  * @return int
  */
-inline int get_used_count(const RegisteredPinSpan& registeredPins)
+inline auto get_used_count(const RegisteredPinSpan& registeredPins) -> int
 {
     int count = 0;
     for (const auto registeredPin : registeredPins) {
@@ -214,35 +216,41 @@ public:
             PinChange::deregister_pin(registeredPins, pin);
         }
     }
+
     PinChangeInterface(const PinChangeInterface&) = delete; // Copy ctor
-    PinChangeInterface& operator=(const PinChangeInterface&) =
-      delete; // Copy assignment
+    auto operator=(const PinChangeInterface&)
+      -> PinChangeInterface& = delete; // Copy assignment
 
     // "Move" registers one object and deregisters the other
-    PinChangeInterface(PinChangeInterface&& other) noexcept // Move ctor
+    PinChangeInterface(PinChangeInterface&& other) noexcept
+      : registeredPins(other.registeredPins)
+      , pin(other.pin) // Move ctor
     {
-        PinChange::deregister_pin(other.registeredPins, other.pin);
-        registeredPins = other.registeredPins;
-        other.registered = false;
-        pin = other.pin;
-        registered = PinChange::register_pin<&Derived::callback, Derived>(
-          registeredPins, pin, static_cast<Derived*>(this));
-    }
-    PinChangeInterface& operator=(
-      PinChangeInterface&& other) noexcept // Move assignment
-    {
-        if (this != &other) {
-            PinChange::deregister_pin(other.registeredPins, other.pin);
-            registeredPins = other.registeredPins;
+        if (PinChange::deregister_pin(other.registeredPins, other.pin)) {
+            // registeredPins = other.registeredPins;
             other.registered = false;
-            pin = other.pin;
+            // pin = other.pin;
             registered = PinChange::register_pin<&Derived::callback, Derived>(
               registeredPins, pin, static_cast<Derived*>(this));
         }
+    }
+    auto operator=(PinChangeInterface&& other) noexcept
+      -> PinChangeInterface& // Move assignment
+    {
+        if (this != &other) {
+            if (PinChange::deregister_pin(other.registeredPins, other.pin)) {
+                registeredPins = other.registeredPins;
+                other.registered = false;
+                pin = other.pin;
+                registered =
+                  PinChange::register_pin<&Derived::callback, Derived>(
+                    registeredPins, pin, static_cast<Derived*>(this));
+            }
+        }
         return *this;
     }
-    int getPin() const { return pin; }
-    bool isRegistered() const { return registered; }
+    [[nodiscard]] auto getPin() const -> int { return pin; }
+    [[nodiscard]] auto isRegistered() const -> bool { return registered; }
     virtual void callback() = 0;
 
 private:

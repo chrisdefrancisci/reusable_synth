@@ -8,6 +8,9 @@
 #include <reusable_synth/hardware/dac.hpp>
 #include <reusable_synth/hardware/interrupt_handler.hpp>
 
+constexpr float COMPUTATION_MIN = -1.0;
+constexpr float COMPUTATION_MAX = 1.0;
+constexpr int DAC_MIN = 0;
 constexpr int DAC_MAX = 4096;
 
 template<typename T>
@@ -20,21 +23,25 @@ static constexpr void mockOperation(std::span<T> out, T in)
 
 static constexpr void convert(uint16_t& out, const float& in)
 {
-    out = std::min(std::max((in + 1.0f) / 2.0f * (float)DAC_MAX, 0.0f),
-                   (float)DAC_MAX);
+    out = (uint16_t)std::min(
+      std::max((in - COMPUTATION_MIN) / (COMPUTATION_MAX - COMPUTATION_MIN) *
+                 (float)DAC_MAX,
+               (float)DAC_MIN),
+      (float)DAC_MAX);
 }
 
 TEST(DacTest, WriteToDoubleBuffer)
 {
-    std::array<float, 100> computedData = { 0.0f };
-    std::array<uint16_t, 200> dacData = { 0 };
+    constexpr int computationBufSize = 100;
+    constexpr int DacBufSize = computationBufSize * 2;
+    std::array<float, computationBufSize> computedData = { 0.0F };
+    std::array<uint16_t, DacBufSize> dacData = { 0 };
     Dac dac(computedData, dacData, convert);
 
-    InterruptHandler fakeHalfCompleteCallback, fakeCompleteCallback;
-    fakeHalfCompleteCallback
-      .connect<&Dac<float, uint16_t, 100>::setHalfCompleteFlag>(&dac);
-    fakeCompleteCallback.connect<&Dac<float, uint16_t, 100>::setCompleteFlag>(
-      &dac);
+    InterruptHandler fakeHalfCompleteCallback;
+    InterruptHandler fakeCompleteCallback;
+    fakeHalfCompleteCallback.connect<&decltype(dac)::setHalfCompleteFlag>(&dac);
+    fakeCompleteCallback.connect<&decltype(dac)::setCompleteFlag>(&dac);
 
     // Before callbacks, all dacData should be 0
     EXPECT_THAT(dacData, testing::Each(0));

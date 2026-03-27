@@ -47,7 +47,7 @@ public:
      *
      * @return std::pair<int, int>
      */
-    virtual std::pair<int, int> getRange() const = 0;
+    [[nodiscard]] virtual auto getRange() const -> std::pair<int, int> = 0;
 
 protected:
     LedBase() = default;
