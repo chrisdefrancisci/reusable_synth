@@ -1,4 +1,4 @@
-Checks: '-*, bugprone-*, cppcoreguidelines-*, modernize-*, readability-*'
+Checks: '-*, bugprone-*, clang-analyzer-*, cppcoreguidelines-*, modernize-*, readability-*'
 CheckOptions:
 # Readability
     - { key: readability-identifier-length.MinimumParameterNameLength, value: 0}
