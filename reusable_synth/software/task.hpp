@@ -8,6 +8,7 @@
 #pragma once
 
 // Standard library includes
+#include "reusable_synth/utils/noncopyable.hpp"
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -80,7 +81,7 @@ public:
      * @return true If interval has elapsed since startInterval.
      * @return false If interval has not yet elapsed since startInterval.
      */
-    bool timeout() const
+    [[nodiscard]] auto timeout() const -> bool
     {
         const TickType current = getTick();
         const TickType elapsed = current - startTick;
@@ -99,11 +100,11 @@ private:
  * @tparam TickType The type to use for the timer.
  */
 template<typename TickType>
-class TaskControlBlockInterface
+class TaskControlBlockInterface : Noncopyable
 {
 public:
-    virtual bool execute() = 0;
-    virtual ~TaskControlBlockInterface() {};
+    virtual auto execute() -> bool = 0;
+    virtual ~TaskControlBlockInterface() = default;
 };
 
 /**
@@ -148,7 +149,7 @@ public:
      * @return true If the task executed.
      * @return false If the task did not execute.
      */
-    bool execute() override
+    auto execute() -> bool override
     {
         if (time.timeout()) {
             // restart timer for 'cycle' ticks from now
@@ -209,7 +210,7 @@ public:
      * @return true If the task executed.
      * @return false If the task did not execute.
      */
-    bool execute() override
+    auto execute() -> bool override
     {
         if (time.timeout()) {
             // restart timer for 'cycle' ticks from now
@@ -230,9 +231,9 @@ private:
 
 template<typename TickType>
 TaskControlBlock(void (*)(),
-                 const typename Timer<TickType>::TickFuncType,
-                 const TickType,
-                 const TickType) -> TaskControlBlock<TickType, void (*)()>;
+                 typename Timer<TickType>::TickFuncType,
+                 TickType,
+                 TickType) -> TaskControlBlock<TickType, void (*)()>;
 
 /**
  * @brief Runs tasks in infinite loop; does not return.

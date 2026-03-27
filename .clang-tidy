@@ -1,1 +1,11 @@
 Checks: '-*, bugprone-*, cppcoreguidelines-*, modernize-*, readability-*'
+CheckOptions:
+# Readability
+    - { key: readability-identifier-length.MinimumParameterNameLength, value: 0}
+    - { key: readability-identifier-length.IgnoredVariableNames, value: "^[ijkn_]$"}
+# Cpp Core Guidelines
+    - { key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor, value: true}
+    - { key: cppcoreguidelines-avoid-non-const-global-variables.AllowInternalLinkage, value: true}
+# WarningsAsErrors: "*"
+# HeaderFilterRegex: .*
+# ExcludeHeaderFilterRegex: build/.*
