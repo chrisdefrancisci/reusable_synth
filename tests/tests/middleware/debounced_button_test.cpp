@@ -4,7 +4,6 @@
 #include <gtest/gtest.h>
 #include <reusable_synth/hardware/pin_change.hpp>
 #include <reusable_synth/middleware/debounced_button.hpp>
-#include <reusable_synth/hardware/pin_change.hpp>
 #include <tests/stubs/stub_getter.hpp>
 
 using millis = std::chrono::duration<uint32_t, std::milli>;
@@ -23,7 +22,7 @@ class MockCount
 {
 public:
     void callback() { count++; }
-    int getCount() { return count; }
+    [[nodiscard]] auto getCount() const -> int { return count; }
 
 private:
     int count = 0;
@@ -38,18 +37,17 @@ TEST(DebouncedButtonTest, edgeCallbackCalled)
 
     std::vector<DebouncedButtonEdge<millis>> buttons;
     for (int pinNum = 0; pinNum < pinCount; pinNum++) {
-        buttons.push_back(
-          DebouncedButtonEdge(registeredPins, pinNum, getTime, debounceTime));
+        buttons.emplace_back(registeredPins, pinNum, getTime, debounceTime);
     }
 
     buttons[0].registerEdgeCallback(mock_free_callback);
 
     MockCount countInstance;
     buttons[1].registerEdgeCallback(
-      [&countInstance]() { countInstance.callback(); });
+      [&countInstance]() -> void { countInstance.callback(); });
 
     int localCount = 0;
-    buttons[2].registerEdgeCallback([&localCount]() { localCount++; });
+    buttons[2].registerEdgeCallback([&localCount]() -> void { localCount++; });
 
     mock_free_callback_counter = 0;
     ASSERT_EQ(countInstance.getCount(), 0);
@@ -78,18 +76,17 @@ TEST(DebouncedButtonTest, edgeCallbackDebounced)
 
     std::vector<DebouncedButtonEdge<millis>> buttons;
     for (int pinNum = 0; pinNum < pinCount; pinNum++) {
-        buttons.push_back(
-          DebouncedButtonEdge(registeredPins, pinNum, getTime, debounceTime));
+        buttons.emplace_back(registeredPins, pinNum, getTime, debounceTime);
     }
 
     buttons[0].registerEdgeCallback(mock_free_callback);
 
     MockCount countInstance;
     buttons[1].registerEdgeCallback(
-      [&countInstance]() { countInstance.callback(); });
+      [&countInstance]() -> void { countInstance.callback(); });
 
     int localCount = 0;
-    buttons[2].registerEdgeCallback([&localCount]() { localCount++; });
+    buttons[2].registerEdgeCallback([&localCount]() -> void { localCount++; });
 
     mock_free_callback_counter = 0;
     ASSERT_EQ(countInstance.getCount(), 0);
