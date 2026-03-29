@@ -31,13 +31,13 @@ public:
     /**
      * @brief Set the Intensity of the LED (raw)
      * @todo remove from the interface
-     * @param value Raw value
+     * @param value Raw value 
      */
     virtual void setIntensity(int value) = 0;
 
     /**
      * @brief Sets the intensity of the LED
-     *
+     * 
      * @param value Percentage from 0.0 to 1.0
      */
     virtual void setIntensity(float value) = 0;
