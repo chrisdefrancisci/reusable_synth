@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 #include <reusable_synth/hardware/pin_change.hpp>
 #include <reusable_synth/middleware/debounced_button.hpp>
+#include <reusable_synth/hardware/pin_change.hpp>
 #include <tests/stubs/stub_getter.hpp>
 
 using millis = std::chrono::duration<uint32_t, std::milli>;
