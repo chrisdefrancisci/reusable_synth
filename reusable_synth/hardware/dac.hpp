@@ -21,7 +21,7 @@
  * @tparam DacType
  * @tparam inputSize
  */
-template<typename ComputationType, typename DacType, size_t inputSize>
+template<typename ComputationType, typename DacType, size_t InputSize>
 class Dac
 {
 public:
@@ -32,8 +32,8 @@ public:
      * @param outputData
      * @param convert
      */
-    Dac(std::span<ComputationType, inputSize> inputData,
-        std::span<DacType, inputSize * 2> outputData,
+    Dac(std::span<ComputationType, InputSize> inputData,
+        std::span<DacType, InputSize * 2> outputData,
         void (*convert)(DacType& out, const ComputationType& in))
       : inputData(inputData)
       , outputData(outputData)
@@ -107,8 +107,8 @@ public:
     }
 
 private:
-    std::span<ComputationType, inputSize> inputData;
-    std::span<DacType, inputSize * 2> outputData;
+    std::span<ComputationType, InputSize> inputData;
+    std::span<DacType, InputSize * 2> outputData;
 
     enum class CallbackType : int
     {
@@ -123,20 +123,20 @@ private:
 // Deduction guide, see
 // https://stackoverflow.com/questions/40951697/what-are-template-deduction-guides-and-when-should-we-use-them
 // https://en.cppreference.com/w/cpp/language/class_template_argument_deduction.html
-template<typename ComputationType, typename DacType, size_t inputSize>
-Dac(std::array<ComputationType, inputSize>,
-    std::array<DacType, inputSize * 2>,
+template<typename ComputationType, typename DacType, size_t InputSize>
+Dac(std::array<ComputationType, InputSize>,
+    std::array<DacType, InputSize * 2>,
     void (*convert)(DacType& out, const ComputationType& in))
-  -> Dac<ComputationType, DacType, inputSize>;
+  -> Dac<ComputationType, DacType, InputSize>;
 
-template<typename ComputationType, typename DacType, size_t inputSize>
-Dac(std::span<ComputationType, inputSize>,
-    std::array<DacType, inputSize * 2>,
+template<typename ComputationType, typename DacType, size_t InputSize>
+Dac(std::span<ComputationType, InputSize>,
+    std::array<DacType, InputSize * 2>,
     void (*convert)(DacType& out, const ComputationType& in))
-  -> Dac<ComputationType, DacType, inputSize>;
+  -> Dac<ComputationType, DacType, InputSize>;
 
-template<typename ComputationType, typename DacType, size_t inputSize>
-Dac(std::array<ComputationType, inputSize>,
-    std::span<DacType, inputSize * 2>,
+template<typename ComputationType, typename DacType, size_t InputSize>
+Dac(std::array<ComputationType, InputSize>,
+    std::span<DacType, InputSize * 2>,
     void (*convert)(DacType& out, const ComputationType& in))
-  -> Dac<ComputationType, DacType, inputSize>;
+  -> Dac<ComputationType, DacType, InputSize>;

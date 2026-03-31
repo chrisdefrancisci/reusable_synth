@@ -31,24 +31,24 @@ enum class LogType
  *
  * @tparam logLen The number of characters (including terminator) a log holds.
  */
-template<int logLen>
+template<int LogLen>
 class Log
 {
 public:
     Log()
       : logType(LogType::INFO)
     {
-        memset(buff.data(), '\0', logLen);
+        memset(buff.data(), '\0', LogLen);
     }
 
     Log(LogType type, const char* message)
       : logType(type)
     {
-        if (strlen(message) < logLen) {
+        if (strlen(message) < LogLen) {
             strcpy(buff.data(), message);
         } else {
-            memcpy(buff.data(), message, logLen - 1);
-            buff[logLen - 1] = '\0';
+            memcpy(buff.data(), message, LogLen - 1);
+            buff[LogLen - 1] = '\0';
         }
     }
 
@@ -57,13 +57,13 @@ public:
     Log(const Log& other)
       : logType(other.logType)
     {
-        memcpy(buff.data(), other.buff.data(), logLen);
+        memcpy(buff.data(), other.buff.data(), LogLen);
     }
 
     Log(Log&& other) noexcept
       : logType(other.logType)
     {
-        memcpy(buff.data(), other.buff.data(), logLen);
+        memcpy(buff.data(), other.buff.data(), LogLen);
     }
 
     auto operator=(const Log& other) -> Log&
@@ -72,14 +72,14 @@ public:
             return *this;
         }
         logType = other.logType;
-        memcpy(buff.data(), other.buff.data(), logLen);
+        memcpy(buff.data(), other.buff.data(), LogLen);
         return *this;
     }
 
     auto operator=(Log&& other) noexcept -> Log&
     {
         logType = other.logType;
-        memcpy(buff.data(), other.buff.data(), logLen);
+        memcpy(buff.data(), other.buff.data(), LogLen);
         return *this;
     }
 
@@ -87,7 +87,7 @@ public:
     [[nodiscard]] auto type() const -> LogType { return logType; };
 
 private:
-    std::array<char, logLen> buff{};
+    std::array<char, LogLen> buff{};
     LogType logType;
 };
 
@@ -97,7 +97,7 @@ private:
  * @tparam nLogs The number of logs to hold.
  * @tparam logLen The length of each log.
  */
-template<int nLogs, int logLen>
+template<int NLogs, int LogLen>
 class Logger
 {
 public:
@@ -169,15 +169,15 @@ public:
                    << std::source_location::current().line() << " "
                    << "Logger overflow!";
 
-            logsBuffer.push_back(
-              Log<logLen>(LogType::WARNING, stream.str().c_str()));
+            logsBuffer.pushBack(
+              Log<LogLen>(LogType::WARNING, stream.str().c_str()));
             stream.clear();
             stream.str("");
         }
         stream << location.file_name() << ":" << location.line() << " "
                << message;
 
-        logsBuffer.push_back(Log<logLen>(type, stream.str().c_str()));
+        logsBuffer.pushBack(Log<LogLen>(type, stream.str().c_str()));
     }
 
     /**
@@ -186,13 +186,13 @@ public:
      * @return std::optional<Log<logLen>> The removed log if there was one or
      * std::nullopt.
      */
-    auto remove_log() -> std::optional<Log<logLen>>
+    auto removeLog() -> std::optional<Log<LogLen>>
     {
         fullFlag = false;
-        return logsBuffer.pop_front();
+        return logsBuffer.popFront();
     }
 
 private:
-    RingBuffer<Log<logLen>, nLogs> logsBuffer;
+    RingBuffer<Log<LogLen>, NLogs> logsBuffer;
     bool fullFlag = false;
 };

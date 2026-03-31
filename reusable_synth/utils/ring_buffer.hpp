@@ -40,13 +40,13 @@ public:
      *
      * @param inValue The new value.
      */
-    void push_back(const T& inValue)
+    void pushBack(const T& inValue)
     {
         if (full()) {
-            (void)pop_front(); // explicitly ignoring return value
+            (void)popFront(); // explicitly ignoring return value
         }
         *back = inValue;
-        safe_increment(back);
+        safeIncrement(back);
         count++;
     };
 
@@ -55,7 +55,7 @@ public:
      *
      * @return std::optional<T> Front value of buffer or std::nullopt.
      */
-    auto pop_front() -> std::optional<T>
+    auto popFront() -> std::optional<T>
     {
         std::optional<T> ret;
         if (empty()) {
@@ -63,7 +63,7 @@ public:
         } else {
             count--;
             ret = *front;
-            safe_increment(front);
+            safeIncrement(front);
         }
         return ret;
     };
@@ -86,7 +86,7 @@ public:
     auto size() -> size_t { return count; }
 
 private:
-    void safe_increment(T*& ptr)
+    void safeIncrement(T*& ptr)
     {
         if (ptr == &buffer[N - 1]) {
             ptr = buffer.data();

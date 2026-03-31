@@ -6,16 +6,17 @@
 #include <reusable_synth/middleware/debounced_button.hpp>
 #include <tests/stubs/stub_getter.hpp>
 
-using millis = std::chrono::duration<uint32_t, std::milli>;
-static millis (*getTime)() = getFreeFunctionValue<millis>;
-static millis (*setTime)(std::optional<millis>) = setFreeFunctionValue<millis>;
+using Millis = std::chrono::duration<uint32_t, std::milli>;
+static Millis (*getTime)() = get_free_function_value<Millis>;
+static Millis (*setTime)(std::optional<Millis>) =
+  set_free_function_value<Millis>;
 
 static constexpr int pinCount = 4;
 
-static int mock_free_callback_counter = 0;
+static int mockFreeCallbackCounter = 0;
 static void mock_free_callback()
 {
-    mock_free_callback_counter++;
+    mockFreeCallbackCounter++;
 }
 
 class MockCount
@@ -30,12 +31,12 @@ private:
 
 TEST(DebouncedButtonTest, edgeCallbackCalled)
 {
-    ASSERT_EQ(setTime(millis(0)), millis(0));
+    ASSERT_EQ(setTime(Millis(0)), Millis(0));
     std::array<PinChange::RegisteredPin, pinCount> registeredPins;
-    millis debounceTime = millis(200);
+    constexpr Millis debounceTime{ 200 };
     ASSERT_EQ(setTime(debounceTime), debounceTime);
 
-    std::vector<DebouncedButtonEdge<millis>> buttons;
+    std::vector<DebouncedButtonEdge<Millis>> buttons;
     for (int pinNum = 0; pinNum < pinCount; pinNum++) {
         buttons.emplace_back(registeredPins, pinNum, getTime, debounceTime);
     }
@@ -49,7 +50,7 @@ TEST(DebouncedButtonTest, edgeCallbackCalled)
     int localCount = 0;
     buttons[2].registerEdgeCallback([&localCount]() -> void { localCount++; });
 
-    mock_free_callback_counter = 0;
+    mockFreeCallbackCounter = 0;
     ASSERT_EQ(countInstance.getCount(), 0);
     EXPECT_EQ(PinChange::get_used_count(registeredPins), pinCount);
 
@@ -62,19 +63,19 @@ TEST(DebouncedButtonTest, edgeCallbackCalled)
         }
     }
 
-    EXPECT_EQ(mock_free_callback_counter, 1);
+    EXPECT_EQ(mockFreeCallbackCounter, 1);
     EXPECT_EQ(countInstance.getCount(), 2);
     EXPECT_EQ(localCount, 3);
 }
 
 TEST(DebouncedButtonTest, edgeCallbackDebounced)
 {
-    ASSERT_EQ(setTime(millis(0)), millis(0));
+    ASSERT_EQ(setTime(Millis(0)), Millis(0));
     std::array<PinChange::RegisteredPin, pinCount> registeredPins;
-    millis debounceTime = millis(200);
+    constexpr Millis debounceTime{ 200 };
     ASSERT_EQ(setTime(debounceTime), debounceTime);
 
-    std::vector<DebouncedButtonEdge<millis>> buttons;
+    std::vector<DebouncedButtonEdge<Millis>> buttons;
     for (int pinNum = 0; pinNum < pinCount; pinNum++) {
         buttons.emplace_back(registeredPins, pinNum, getTime, debounceTime);
     }
@@ -88,7 +89,7 @@ TEST(DebouncedButtonTest, edgeCallbackDebounced)
     int localCount = 0;
     buttons[2].registerEdgeCallback([&localCount]() -> void { localCount++; });
 
-    mock_free_callback_counter = 0;
+    mockFreeCallbackCounter = 0;
     ASSERT_EQ(countInstance.getCount(), 0);
     EXPECT_EQ(PinChange::get_used_count(registeredPins), pinCount);
 
@@ -96,12 +97,12 @@ TEST(DebouncedButtonTest, edgeCallbackDebounced)
     // Time elapsed is NOT enough to call the same callback
     for (const auto& button : buttons) {
         for (int i = 0; i <= button.getPin(); i++) {
-            setTime(getTime() + millis(1));
+            setTime(getTime() + Millis(1));
             PinChange::irq_dispatch(registeredPins, button.getPin());
         }
     }
 
-    EXPECT_EQ(mock_free_callback_counter, 1);
+    EXPECT_EQ(mockFreeCallbackCounter, 1);
     EXPECT_EQ(countInstance.getCount(), 1);
     EXPECT_EQ(localCount, 1);
 }

@@ -3,7 +3,7 @@
 #include <optional>
 
 template<typename T>
-inline T setFreeFunctionValue(std::optional<T> newVal)
+inline auto set_free_function_value(std::optional<T> newVal) -> T
 {
     static T val = T();
     if (newVal.has_value()) {
@@ -13,7 +13,7 @@ inline T setFreeFunctionValue(std::optional<T> newVal)
 }
 
 template<typename T>
-inline T getFreeFunctionValue()
+inline auto get_free_function_value() -> T
 {
-    return setFreeFunctionValue<T>(std::nullopt);
+    return set_free_function_value<T>(std::nullopt);
 }

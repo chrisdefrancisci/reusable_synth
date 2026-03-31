@@ -14,10 +14,10 @@
 /**
  * @brief This is the abstract interface class for writing to an LED.
  */
-class LedBase
+class LedInterface
 {
 public:
-    virtual ~LedBase() = default;
+    virtual ~LedInterface() = default;
     /**
      * @brief Turns LED on.
      */
@@ -50,17 +50,17 @@ public:
     [[nodiscard]] virtual auto getRange() const -> std::pair<int, int> = 0;
 
 protected:
-    LedBase() = default;
+    LedInterface() = default;
 };
 
 /**
- * @brief A template derived class of ledBase that must be specialized for the
- * hardware.
+ * @brief A template derived class of LedInterface that must be specialized for
+ * the hardware.
  *
  * @tparam T The type of the hardware handle.
  */
 template<typename T>
-class Led : public LedBase
+class Led : public LedInterface
 {
 private:
     Led() = default;

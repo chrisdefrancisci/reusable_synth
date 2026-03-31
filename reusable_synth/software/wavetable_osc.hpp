@@ -19,23 +19,23 @@
  *
  * @tparam T Underlying data type
  * @tparam Period Number of samples to form one period
- * @tparam min Min value of the square
- * @tparam max Max value of the square
+ * @tparam Min Min value of the square
+ * @tparam Max Max value of the square
  */
-template<typename T, int Period, int min = -1, int max = 1>
+template<typename T, int Period, int Min = -1, int Max = 1>
 struct SquareWavetable
 {
     constexpr SquareWavetable()
       : data()
     {
-        T value = min;
+        T value = Min;
         for (auto i = 0, duty = 0; i != Period; i++, duty++) {
             if (duty == Period / 2) {
                 duty = 0;
-                if (value == min) {
-                    value = max;
+                if (value == Min) {
+                    value = Max;
                 } else {
-                    value = min;
+                    value = Min;
                 }
             }
             data[i] = value;
@@ -50,18 +50,18 @@ struct SquareWavetable
  * @todo Is making the waveform constructor constexpr actually helpful?
  * @tparam T Underlying data type
  * @tparam Period Number of samples to form one period
- * @tparam min Min value of the ramp
- * @tparam max (Hypothetical) max value of the ramp sampled at the discontinuity
+ * @tparam Min Min value of the ramp
+ * @tparam Max (Hypothetical) max value of the ramp sampled at the discontinuity
  */
-template<typename T, int Period, int min = -1, int max = 1>
+template<typename T, int Period, int Min = -1, int Max = 1>
 struct RampWavetable
 {
     constexpr RampWavetable()
       : data()
     {
-        float step = float(max - min) / float(Period);
+        float step = float(Max - Min) / float(Period);
         for (int i = 0; i < Period; i++) {
-            data[i] = min + T((float)i * step);
+            data[i] = Min + T((float)i * step);
         }
     }
     std::array<T, Period> data;
@@ -74,19 +74,24 @@ struct RampWavetable
  * @todo replace min max scaling the next time I need it
  * @tparam T Underlying data type
  * @tparam Period Number of samples to form one period
- * @tparam min Min value of the sine wave
- * @tparam max Max value of the sine wave
+ * @tparam Min Min value of the sine wave
+ * @tparam Max Max value of the sine wave
  */
-template<typename T, int Period, int min = -1, int max = 1>
+template<typename T, int Period, int Min = -1, int Max = 1>
 struct SineWavetable
 {
+private:
+    static constexpr float sineAmplitude = 2.0;
+
+public:
     constexpr SineWavetable()
       : data()
     {
         for (int i = 0; i < Period; i++) {
-            float raw =
-              std::sin(std::numbers::pi_v<float> * 2.0F * (float)i / Period);
-            data[i] = T(((raw + 1.0F) * float(max - min) / 2.0F) + min);
+            float raw = std::sin(std::numbers::pi_v<float> * sineAmplitude *
+                                 (float)i / Period);
+            data[i] =
+              T(((raw + 1.0F) * float(Max - Min) / sineAmplitude) + Min);
         }
     }
     std::array<T, Period> data;

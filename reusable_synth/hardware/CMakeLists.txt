@@ -5,6 +5,6 @@ target_sources(ReusableSynthInterface
         FILE_SET HEADERS 
         FILES 
             interrupt_handler.hpp
-            led.hpp
+            led_interface.hpp
             pin_change.hpp
 )
