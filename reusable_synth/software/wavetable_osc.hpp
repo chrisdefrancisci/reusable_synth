@@ -77,21 +77,21 @@ struct RampWavetable
  * @tparam Min Min value of the sine wave
  * @tparam Max Max value of the sine wave
  */
-template<typename T, int Period, int Min = -1, int Max = 1>
+template<typename T, int Period>
 struct SineWavetable
 {
 private:
     static constexpr float sineAmplitude = 2.0;
 
 public:
-    constexpr SineWavetable()
+    constexpr SineWavetable(T min, T max)
       : data()
     {
         for (int i = 0; i < Period; i++) {
             float raw = std::sin(std::numbers::pi_v<float> * sineAmplitude *
                                  (float)i / Period);
             data[i] =
-              T(((raw + 1.0F) * float(Max - Min) / sineAmplitude) + Min);
+              T(((raw + 1.0F) * float(max - min) / sineAmplitude) + min);
         }
     }
     std::array<T, Period> data;

@@ -60,7 +60,7 @@ TEST(WavetableOscTest, SineWaveAtFsOver8)
     constexpr float samplingFreq = 44100;
     constexpr float oscFreq = samplingFreq / 8;
     constexpr int length = 32;
-    SineWavetable<float, length> sineWavetable;
+    SineWavetable<float, length> sineWavetable(-1, 1);
     WavetableOsc osc(sineWavetable.data);
 
     constexpr int nSamples = 8; // number of samples in a period
@@ -82,7 +82,7 @@ TEST(WavetableOscTest, SineWaveIntAtFsOver8)
     constexpr float samplingFreq = 44100;
     constexpr float oscFreq = samplingFreq / 8;
     constexpr int length = 32;
-    SineWavetable<int, length, 0, 255> sineWavetable;
+    SineWavetable<int, length> sineWavetable(0, 255);
     WavetableOsc osc(sineWavetable.data);
 
     std::array truth = { 127, 217, 255, 217, 127, 37, 0, 37, 127 };

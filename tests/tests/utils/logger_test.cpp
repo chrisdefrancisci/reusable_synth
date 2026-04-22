@@ -7,7 +7,7 @@
 
 #include <reusable_synth/utils/logger.hpp>
 
-TEST(LoggerTest, StringTooLong) {}
+// TODO TEST(LoggerTest, StringTooLong) {}
 
 TEST(LoggerTest, AddOneString)
 {

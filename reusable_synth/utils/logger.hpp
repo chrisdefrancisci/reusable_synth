@@ -7,6 +7,7 @@
 
 #include <cstring>
 #include <iostream>
+#include <optional>
 #include <source_location>
 #include <sstream>
 #include <string_view>
