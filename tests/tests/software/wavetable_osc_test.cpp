@@ -12,7 +12,7 @@ TEST(WavetableOscTest, SquareWaveAtFsOver8)
 {
     constexpr float samplingFreq = 44100;
     constexpr float oscFreq = samplingFreq / 8;
-    constexpr auto squareWavetable = SquareWavetable<float, 32>();
+    constexpr auto squareWavetable = SquareWavetable<float, 32>(-1.0F, 1.0F);
 
     // TODO: look at why implicit type deduction fails here
     WavetableOsc<float> osc(squareWavetable.data);
@@ -28,7 +28,7 @@ TEST(WavetableOscTest, RampWaveAtFsOver8)
 {
     constexpr float samplingFreq = 44100;
     constexpr float oscFreq = samplingFreq / 8;
-    constexpr auto rampWavetable = RampWavetable<float, 32>();
+    constexpr auto rampWavetable = RampWavetable<float, 32>(-1.0F, 1.0F);
 
     WavetableOsc<float> osc(rampWavetable.data);
     std::array<float, 9> truth = { -1.0, -0.75, -0.5, -0.25, 0.0,
@@ -44,7 +44,7 @@ TEST(WavetableOscTest, RampWaveIntAtFsOver8)
 {
     constexpr float samplingFreq = 44100;
     constexpr float oscFreq = samplingFreq / 8;
-    constexpr auto rampWavetable = RampWavetable<int, 8, 0, 4>();
+    constexpr auto rampWavetable = RampWavetable<int, 8>(0, 4);
 
     WavetableOsc osc(rampWavetable.data);
     std::array truth = { 0, 0, 1, 1, 2, 2, 3, 3, 0 };
