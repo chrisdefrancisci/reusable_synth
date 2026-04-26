@@ -7,6 +7,7 @@
 
 #include <cstring>
 #include <iostream>
+#include <optional>
 #include <source_location>
 #include <sstream>
 #include <string_view>
@@ -31,58 +32,63 @@ enum class LogType
  *
  * @tparam logLen The number of characters (including terminator) a log holds.
  */
-template<int logLen>
+template<int LogLen>
 class Log
 {
 public:
     Log()
       : logType(LogType::INFO)
     {
-        memset(buff, '\0', logLen);
+        memset(buff.data(), '\0', LogLen);
     }
 
     Log(LogType type, const char* message)
       : logType(type)
     {
-        if (strlen(message) < logLen) {
-            strcpy(buff, message);
+        if (strlen(message) < LogLen) {
+            strcpy(buff.data(), message);
         } else {
-            memcpy(buff, message, logLen - 1);
-            buff[logLen - 1] = '\0';
+            memcpy(buff.data(), message, LogLen - 1);
+            buff[LogLen - 1] = '\0';
         }
     }
+
+    ~Log() = default;
 
     Log(const Log& other)
       : logType(other.logType)
     {
-        memcpy(buff, other.buff, logLen);
+        memcpy(buff.data(), other.buff.data(), LogLen);
     }
 
-    Log(Log&& other)
+    Log(Log&& other) noexcept
       : logType(other.logType)
     {
-        memcpy(buff, other.buff, logLen);
+        memcpy(buff.data(), other.buff.data(), LogLen);
     }
 
-    Log& operator=(const Log& other)
+    auto operator=(const Log& other) -> Log&
     {
+        if (&other == this) {
+            return *this;
+        }
         logType = other.logType;
-        memcpy(buff, other.buff, logLen);
+        memcpy(buff.data(), other.buff.data(), LogLen);
         return *this;
     }
 
-    Log& operator=(const Log&& other)
+    auto operator=(Log&& other) noexcept -> Log&
     {
         logType = other.logType;
-        memcpy(buff, other.buff, logLen);
+        memcpy(buff.data(), other.buff.data(), LogLen);
         return *this;
     }
 
-    const char* pBuffer() const { return buff; };
-    LogType type() const { return logType; };
+    [[nodiscard]] auto pBuffer() const -> const char* { return buff.data(); };
+    [[nodiscard]] auto type() const -> LogType { return logType; };
 
 private:
-    char buff[logLen];
+    std::array<char, LogLen> buff{};
     LogType logType;
 };
 
@@ -92,14 +98,11 @@ private:
  * @tparam nLogs The number of logs to hold.
  * @tparam logLen The length of each log.
  */
-template<int nLogs, int logLen>
+template<int NLogs, int LogLen>
 class Logger
 {
 public:
-    Logger()
-      : fullFlag(false)
-    {
-    }
+    Logger() = default;
 
     /**
      * @brief Convenience function to add a info message to the logger.
@@ -160,21 +163,22 @@ public:
     {
         // TODO: find alternative solution, stringstream is likely a terrible
         // choice for a memory constrained system
-        std::stringstream ss;
+        std::stringstream stream;
         if (logsBuffer.full() && !fullFlag) {
             fullFlag = true;
-            ss << std::source_location::current().file_name() << ":"
-               << std::source_location::current().line() << " "
-               << "Logger overflow!";
+            stream << std::source_location::current().file_name() << ":"
+                   << std::source_location::current().line() << " "
+                   << "Logger overflow!";
 
-            logsBuffer.push_back(
-              Log<logLen>(LogType::WARNING, ss.str().c_str()));
-            ss.clear();
-            ss.str("");
+            logsBuffer.pushBack(
+              Log<LogLen>(LogType::WARNING, stream.str().c_str()));
+            stream.clear();
+            stream.str("");
         }
-        ss << location.file_name() << ":" << location.line() << " " << message;
+        stream << location.file_name() << ":" << location.line() << " "
+               << message;
 
-        logsBuffer.push_back(Log<logLen>(type, ss.str().c_str()));
+        logsBuffer.pushBack(Log<LogLen>(type, stream.str().c_str()));
     }
 
     /**
@@ -183,13 +187,13 @@ public:
      * @return std::optional<Log<logLen>> The removed log if there was one or
      * std::nullopt.
      */
-    std::optional<Log<logLen>> remove_log()
+    auto removeLog() -> std::optional<Log<LogLen>>
     {
         fullFlag = false;
-        return logsBuffer.pop_front();
+        return logsBuffer.popFront();
     }
 
 private:
-    RingBuffer<Log<logLen>, nLogs> logsBuffer;
-    bool fullFlag;
+    RingBuffer<Log<LogLen>, NLogs> logsBuffer;
+    bool fullFlag = false;
 };

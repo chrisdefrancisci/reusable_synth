@@ -14,11 +14,10 @@
  */
 class Noncopyable
 {
-protected:
-    Noncopyable() {}
-    ~Noncopyable() {}
+public:
+    Noncopyable() = default;
+    ~Noncopyable() = default;
 
-private:
     Noncopyable(const Noncopyable&) = delete;
     Noncopyable(Noncopyable&&) = delete;
 

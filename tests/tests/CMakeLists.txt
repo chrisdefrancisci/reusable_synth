@@ -1,15 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/utils/)
-
-target_sources(${CMAKE_PROJECT_NAME}
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/led_test.cpp 
-        ${CMAKE_CURRENT_SOURCE_DIR}/task_test.cpp
-    # PUBLIC
-        # FILE_SET HEADERS 
-        # FILES 
-)
+add_subdirectory(hardware)
+add_subdirectory(middleware)
+add_subdirectory(software)
+add_subdirectory(utils)

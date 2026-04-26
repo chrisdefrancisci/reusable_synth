@@ -1,8 +1,8 @@
-target_sources(ReusableSynthTests
+target_sources(ReusableSynthInterface
     # PRIVATE 
     # put source files here
     PUBLIC
         FILE_SET HEADERS 
         FILES 
-            mock_led.hpp
+            debounced_button.hpp
 )

@@ -1,0 +1,103 @@
+# WarningsAsErrors: "*"
+# HeaderFilterRegex: .*
+# ExcludeHeaderFilterRegex: build/.*
+Checks: '-*, bugprone-*, clang-analyzer-*, cppcoreguidelines-*, modernize-*, readability-*'
+CheckOptions:
+
+  # Cpp Core Guidelines ###########################################################
+  - key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
+    value: 'true'
+  - key: cppcoreguidelines-avoid-non-const-global-variables.AllowInternalLinkage
+    value: 'true'
+
+  # Readability ###################################################################
+  - key: readability-identifier-length.MinimumParameterNameLength
+    value: '0'
+  - key: readability-identifier-length.IgnoredVariableNames
+    value: '^[ijkn_]$'
+
+  # ── Namespaces ─────────────────────────────────────────────────────────────────
+  - key: readability-identifier-naming.NamespaceCase
+    value: CamelCase
+
+  # ── Types: classes, structs, unions ────────────────────────────────────────────
+  - key: readability-identifier-naming.AbstractClassSuffix
+    value: "Interface"
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.UnionCase
+    value: CamelCase
+
+  # ── Enum ───────────────────────────────────────────────────────────────────────
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumConstantCase
+    value: CamelCase
+
+  # ── Template parameters ────────────────────────────────────────────────────────
+  - key: readability-identifier-naming.TemplateParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.TemplateTemplateParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.ValueTemplateParameterCase
+    value: CamelCase
+
+  # ── Type aliases (using) ───────────────────────────────────────────────────────
+  - key: readability-identifier-naming.TypeAliasCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypedefCase
+    value: CamelCase
+
+  # ── Free functions ─────────────────────────────────────────────────────────────
+  - key: readability-identifier-naming.FunctionCase
+    value: lower_case
+
+  # ── Methods ────────────────────────────────────────────────────────────────────
+  - key: readability-identifier-naming.MethodCase
+    value: camelBack
+  - key: readability-identifier-naming.ConstexprMethodCase
+    value: camelBack
+  - key: readability-identifier-naming.VirtualMethodCase
+    value: camelBack
+
+  # ── Parameters ─────────────────────────────────────────────────────────────────
+  - key: readability-identifier-naming.ParameterCase
+    value: camelBack
+  - key: readability-identifier-naming.ParameterPackCase
+    value: camelBack
+
+  # ── Member variables ───────────────────────────────────────────────────────────
+  - key: readability-identifier-naming.MemberCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMemberCase
+    value: camelBack
+  - key: readability-identifier-naming.PublicMemberCase
+    value: camelBack
+  - key: readability-identifier-naming.ProtectedMemberCase
+    value: camelBack
+
+  # ── Local variables ────────────────────────────────────────────────────────────
+  - key: readability-identifier-naming.VariableCase
+    value: camelBack
+  - key: readability-identifier-naming.LocalVariableCase
+    value: camelBack
+
+  # ── constexpr variables ────────────────────────────────────────────────────────
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: camelBack
+  - key: readability-identifier-naming.LocalConstantCase
+    value: camelBack
+  - key: readability-identifier-naming.ConstantCase
+    value: camelBack
+
+  # ── Static / global variables ──────────────────────────────────────────────────
+  - key: readability-identifier-naming.StaticVariableCase
+    value: camelBack
+  - key: readability-identifier-naming.GlobalVariableCase
+    value: camelBack
+
+  # ── Macros ─────────────────────────────────────────────────────────────────────
+  - key: readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE

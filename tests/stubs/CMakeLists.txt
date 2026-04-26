@@ -4,5 +4,5 @@ target_sources(ReusableSynthTests
     PUBLIC
         FILE_SET HEADERS 
         FILES 
-            mock_led.hpp
+            stub_getter.hpp
 )

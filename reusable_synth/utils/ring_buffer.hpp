@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <iostream>
 #include <optional>
@@ -27,10 +28,10 @@ class RingBuffer : private Noncopyable
 {
 public:
     RingBuffer()
-      : buffer{}
-      , back{ buffer }
-      , front{ buffer }
-      , count{ 0 } {};
+      : back(buffer.data())
+      , front(buffer.data())
+    {
+    }
 
     /**
      * @brief Adds a value to the back of the buffer.
@@ -39,13 +40,13 @@ public:
      *
      * @param inValue The new value.
      */
-    void push_back(const T& inValue)
+    void pushBack(const T& inValue)
     {
         if (full()) {
-            (void)pop_front(); // explicitly ignoring return value
+            (void)popFront(); // explicitly ignoring return value
         }
         *back = inValue;
-        safe_increment(back);
+        safeIncrement(back);
         count++;
     };
 
@@ -54,7 +55,7 @@ public:
      *
      * @return std::optional<T> Front value of buffer or std::nullopt.
      */
-    std::optional<T> pop_front()
+    auto popFront() -> std::optional<T>
     {
         std::optional<T> ret;
         if (empty()) {
@@ -62,7 +63,7 @@ public:
         } else {
             count--;
             ret = *front;
-            safe_increment(front);
+            safeIncrement(front);
         }
         return ret;
     };
@@ -71,31 +72,31 @@ public:
      * @brief Returns true if there are no values in the buffer, false
      * otherwise.
      */
-    bool empty() { return count == 0; }
+    auto empty() -> bool { return count == 0; }
 
     /**
      * @brief Returns true if all spots in the buffer are filled, false
      * otherwise.
      */
-    bool full() { return count == N; }
+    auto full() -> bool { return count == N; }
 
     /**
      * @brief Returns the number of elements currently in the buffer.
      */
-    size_t size() { return count; }
+    auto size() -> size_t { return count; }
 
 private:
-    inline void safe_increment(T*& ptr)
+    void safeIncrement(T*& ptr)
     {
         if (ptr == &buffer[N - 1]) {
-            ptr = &buffer[0];
+            ptr = buffer.data();
         } else {
-            ptr++;
+            ptr++; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         }
     }
 
-    T buffer[N];
+    std::array<T, N> buffer{};
     T* back;
     T* front;
-    size_t count;
+    size_t count{};
 };
