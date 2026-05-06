@@ -28,8 +28,8 @@ enum class DmaDirection
  * should be renamed.
  *
  * @tparam T The type of the destination data.
- * @tparam Size The size of the source data, or half the size of the
- * destination data.
+ * @tparam Size The size of the internal memory data, or half the size of the
+ * peripheral data.
  */
 template<typename T, size_t Size>
 class CircularDma
