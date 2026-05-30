@@ -90,14 +90,12 @@ TEST(MultiChannelDma, Deinterleave) // PeripheralToMemory
     }
 
     // This is what the DMA manager should do
-    for (auto i : std::views::iota(size_t(0), nChannels)) {
-        auto channelBuf = memData | std::views::drop(i * channelBufSize) |
-                          std::views::take(channelBufSize);
-        auto deinterleavedPeriphBuf =
-          periphData | std::views::drop(i) | std::views::stride(nChannels);
-        auto zipped = std::views::zip(channelBuf, deinterleavedPeriphBuf);
-        for (auto [out, in] : zipped) {
-            out = in;
+    for (int channelIdx = 0; channelIdx < nChannels; channelIdx++) {
+        auto channelBuf =
+          std::span(&memData.at(channelIdx * channelBufSize), channelBufSize);
+        for (int sampleIdx = 0; sampleIdx < channelBufSize; sampleIdx++) {
+            channelBuf[sampleIdx] =
+              periphData.at((sampleIdx * nChannels) + channelIdx);
         }
     }
 
