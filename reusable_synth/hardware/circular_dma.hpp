@@ -19,19 +19,20 @@ enum class DmaDirection
 };
 
 /**
- * @brief Provides the frame work for a continuous, circular transfer of data.
+ * @brief Provides the framework for a continuous, circular transfer of data.
  *
  * For a memory to peripheral transfer, source will be the memory and
  * destination will be the peripheral.
  *
- * @todo: will source = memory for peripheral to memory transfer? If so, this
- * should be renamed.
+ * @todo: enforce that Size is divisible by NChannels
  *
  * @tparam T The type of the destination data.
- * @tparam Size The size of the internal memory data, or half the size of the
- * peripheral data.
+ * @tparam Size The size of the all memory data, or half
+ * the size of the peripheral data.
+ * @tparam NChannels The number of channels to be interleaved to the peripheral
+ * or deinterleaved from the peripheral
  */
-template<typename T, size_t Size>
+template<typename T, size_t Size, size_t NChannels = 1>
 class CircularDma
 {
 public:
@@ -57,29 +58,48 @@ public:
     template<DmaDirection Direction>
     void execute()
     {
+        constexpr size_t channelSize = Size / NChannels;
+        auto periphBegin = periphData.begin();
+        auto memBegin = memoryData.begin();
+        auto periphEnd = periphBegin + Size;
+        auto memEnd = memoryData.end();
         if (callbackFlag == CallbackType::HalfComplete) {
             callbackFlag = CallbackType::None;
-            auto periphBegin = periphData.begin();
-            auto memBegin = memoryData.begin();
-            auto periphEnd = periphBegin + Size;
-            auto memEnd = memoryData.end();
-            if constexpr (Direction == DmaDirection::MemoryToPeripheral) {
-                std::copy(memBegin, memEnd, periphBegin);
-            } else if constexpr (Direction ==
-                                 DmaDirection::PeripheralToMemory) {
-                std::copy(periphBegin, periphEnd, memBegin);
-            }
         } else if (callbackFlag == CallbackType::FullComplete) {
             callbackFlag = CallbackType::None;
-            auto periphBegin = periphData.begin() + Size;
-            auto memBegin = memoryData.begin();
-            auto periphEnd = periphData.end();
-            auto memEnd = memoryData.end();
-            if constexpr (Direction == DmaDirection::MemoryToPeripheral) {
+            periphBegin = periphData.begin() + Size;
+            memBegin = memoryData.begin();
+            periphEnd = periphData.end();
+            memEnd = memoryData.end();
+        }
+
+        if constexpr (Direction == DmaDirection::MemoryToPeripheral) {
+            if constexpr (NChannels == 1) {
                 std::copy(memBegin, memEnd, periphBegin);
-            } else if constexpr (Direction ==
-                                 DmaDirection::PeripheralToMemory) {
+            } else {
+                for (int channelIdx = 0; channelIdx < NChannels; channelIdx++) {
+                    auto channelBuf = std::span(
+                      &memoryData[channelIdx * channelSize], channelSize);
+                    for (int sampleIdx = 0; sampleIdx < channelSize;
+                         sampleIdx++) {
+                        periphData[(sampleIdx * NChannels) + channelIdx] =
+                          channelBuf[sampleIdx];
+                    }
+                }
+            }
+        } else if constexpr (Direction == DmaDirection::PeripheralToMemory) {
+            if constexpr (NChannels == 1) {
                 std::copy(periphBegin, periphEnd, memBegin);
+            } else {
+                for (int channelIdx = 0; channelIdx < NChannels; channelIdx++) {
+                    auto channelBuf = std::span(
+                      &memoryData[channelIdx * channelSize], channelSize);
+                    for (int sampleIdx = 0; sampleIdx < channelSize;
+                         sampleIdx++) {
+                        channelBuf[sampleIdx] =
+                          periphData[(sampleIdx * NChannels) + channelIdx];
+                    }
+                }
             }
         }
     }

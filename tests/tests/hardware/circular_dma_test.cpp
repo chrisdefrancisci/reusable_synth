@@ -83,12 +83,23 @@ TEST(MultiChannelDma, Deinterleave) // PeripheralToMemory
     constexpr size_t periphBufSize = memBufSize * 2;
     std::array<uint16_t, memBufSize> memData{};
     std::array<uint16_t, periphBufSize> periphData{};
+    CircularDma<uint16_t, memBufSize, nChannels> dma(memData, periphData);
 
     // Initialize the peripheral buffer
     for (auto [idx, data] : std::views::enumerate(periphData)) {
         data = idx % nChannels;
     }
 
+    InterruptHandler fakeHalfCompleteCallback;
+    InterruptHandler fakeCompleteCallback;
+    fakeHalfCompleteCallback.connect<&decltype(dma)::setHalfCompleteFlag>(&dma);
+    fakeCompleteCallback.connect<&decltype(dma)::setCompleteFlag>(&dma);
+
+    EXPECT_FALSE(dma.isReady());
+    fakeHalfCompleteCallback();
+    EXPECT_TRUE(dma.isReady());
+
+    dma.execute<DmaDirection::PeripheralToMemory>();
     // This is what the DMA manager should do
     for (int channelIdx = 0; channelIdx < nChannels; channelIdx++) {
         auto channelBuf =
