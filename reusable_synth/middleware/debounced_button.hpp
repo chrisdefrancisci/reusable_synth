@@ -27,7 +27,7 @@ class DebouncedButtonEdge
 public:
     DebouncedButtonEdge(PinChange::RegisteredPinSpan registeredPins,
                         uint16_t pin,
-                        Timer<TickType>::TickFuncType getTick,
+                        typename Timer<TickType>::TickFuncType getTick,
                         TickType debounceInterval)
       : PinChange::PinChangeInterface<DebouncedButtonEdge<TickType>>(
           registeredPins,

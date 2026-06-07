@@ -8,7 +8,10 @@
 #pragma once
 
 #include <algorithm>
+#include <cstddef>
+#include <ranges>
 #include <span>
+#include <type_traits>
 
 #include <reusable_synth/hardware/interrupt_handler.hpp>
 
@@ -32,10 +35,11 @@ enum class DmaDirection
  * @tparam NChannels The number of channels to be interleaved to the peripheral
  * or deinterleaved from the peripheral
  */
-template<typename T, size_t Size, size_t NChannels = 1>
+template<DmaDirection Direction, int NChannels, typename T, int Size>
 class CircularDma
 {
 public:
+    using enum DmaDirection;
     /**
      * @brief Construct a new CircularDma object
      *
@@ -43,61 +47,83 @@ public:
      * @param periphData
      */
     CircularDma(std::span<T, Size> memoryData,
-                std::span<T, Size * 2> periphData)
+                std::span<T, static_cast<long>(Size) * 2> periphData)
       : memoryData(memoryData)
       , periphData(periphData)
       , callbackFlag(CallbackType::FullComplete) // init to start writing data
                                                  // in the middle
     {
+        if constexpr (Direction == MemoryToPeripheral) {
+            callbackFlag = CallbackType::FullComplete;
+        } else if constexpr (Direction == PeripheralToMemory) {
+            callbackFlag = CallbackType::None;
+        }
     }
 
     /**
      * @brief Copies data to the CircularDma buffer.
      *
      */
-    template<DmaDirection Direction>
     void execute()
     {
-        constexpr size_t channelSize = Size / NChannels;
-        auto periphBegin = periphData.begin();
-        auto memBegin = memoryData.begin();
-        auto periphEnd = periphBegin + Size;
-        auto memEnd = memoryData.end();
+        constexpr auto channelBufSize = Size / NChannels;
+        using InputType = std::conditional_t<Direction == MemoryToPeripheral,
+                                             decltype(memoryData.begin()),
+                                             decltype(periphData.begin())>;
+        using OutputType = std::conditional_t<Direction == MemoryToPeripheral,
+                                              decltype(periphData.begin()),
+                                              decltype(memoryData.begin())>;
+        InputType inputBeginIt;
+        InputType inputEndIt;
+        OutputType outputBeginIt;
+
+        // Set iterators
         if (callbackFlag == CallbackType::HalfComplete) {
+            if constexpr (Direction == MemoryToPeripheral) {
+                inputBeginIt = memoryData.begin();
+                inputEndIt = memoryData.end();
+                outputBeginIt = periphData.begin();
+            } else if constexpr (Direction == PeripheralToMemory) {
+                inputBeginIt = periphData.begin();
+                inputEndIt = periphData.begin() + Size;
+                outputBeginIt = memoryData.begin();
+            }
             callbackFlag = CallbackType::None;
         } else if (callbackFlag == CallbackType::FullComplete) {
+            if constexpr (Direction == MemoryToPeripheral) {
+                inputBeginIt = memoryData.begin();
+                inputEndIt = memoryData.end();
+                outputBeginIt = periphData.begin() + Size;
+            } else if constexpr (Direction == PeripheralToMemory) {
+                inputBeginIt = periphData.begin() + Size;
+                inputEndIt = periphData.end();
+                outputBeginIt = memoryData.begin();
+            }
             callbackFlag = CallbackType::None;
-            periphBegin = periphData.begin() + Size;
-            memBegin = memoryData.begin();
-            periphEnd = periphData.end();
-            memEnd = memoryData.end();
         }
 
-        if constexpr (Direction == DmaDirection::MemoryToPeripheral) {
-            if constexpr (NChannels == 1) {
-                std::copy(memBegin, memEnd, periphBegin);
-            } else {
-                for (int channelIdx = 0; channelIdx < NChannels; channelIdx++) {
-                    auto channelBuf = std::span(
-                      &memoryData[channelIdx * channelSize], channelSize);
-                    for (int sampleIdx = 0; sampleIdx < channelSize;
-                         sampleIdx++) {
-                        periphData[(sampleIdx * NChannels) + channelIdx] =
-                          channelBuf[sampleIdx];
-                    }
+        // Do copy
+        if constexpr (NChannels == 1) {
+            std::copy(inputBeginIt, inputEndIt, outputBeginIt);
+        } else {
+            // Mem -> Periph: Need to interleave
+            // Periph -> Mem: Need to deinterleave
+            // TODO: maybe make interleave/deinterleave iterators?
+            if constexpr (Direction == MemoryToPeripheral) {
+                // TODO: make as below (and refactor)
+                for (int i = 0; i < Size; i++) {
+                    *std::next(outputBeginIt, (i * NChannels) % Size) =
+                      *std::next(inputBeginIt, i);
                 }
-            }
-        } else if constexpr (Direction == DmaDirection::PeripheralToMemory) {
-            if constexpr (NChannels == 1) {
-                std::copy(periphBegin, periphEnd, memBegin);
-            } else {
-                for (int channelIdx = 0; channelIdx < NChannels; channelIdx++) {
-                    auto channelBuf = std::span(
-                      &memoryData[channelIdx * channelSize], channelSize);
-                    for (int sampleIdx = 0; sampleIdx < channelSize;
-                         sampleIdx++) {
-                        channelBuf[sampleIdx] =
-                          periphData[(sampleIdx * NChannels) + channelIdx];
+            } else if constexpr (Direction == PeripheralToMemory) {
+                // TODO: refactor for cleanliness
+                for (int channel = 0; channel < NChannels; channel++) {
+                    auto channelBuf =
+                      std::span(&*(outputBeginIt + (channel * channelBufSize)),
+                                channelBufSize);
+                    for (int sample = 0; sample < channelBufSize; sample++) {
+                        channelBuf[sample] =
+                          *(inputBeginIt + (sample * NChannels) + channel);
                     }
                 }
             }
@@ -153,17 +179,18 @@ private:
     CallbackType callbackFlag;
 };
 
-// Deduction guide, see
-// https://stackoverflow.com/questions/40951697/what-are-template-deduction-guides-and-when-should-we-use-them
-// https://en.cppreference.com/w/cpp/language/class_template_argument_deduction.html
-template<typename T, size_t Size>
-CircularDma(std::array<T, Size>, std::array<T, Size * 2>)
-  -> CircularDma<T, Size>;
+template<DmaDirection Direction, typename T, size_t Size>
+auto make_circulardma(std::span<T, Size> memoryData,
+                      std::span<T, static_cast<long>(Size) * 2> periphData)
+  -> CircularDma<Direction, 1, T, Size>
+{
+    return CircularDma<Direction, 1, T, Size>(memoryData, periphData);
+}
 
-template<typename T, size_t Size>
-CircularDma(std::array<T, Size>, std::span<T, Size * 2>)
-  -> CircularDma<T, Size>;
-
-template<typename T, size_t Size>
-CircularDma(std::span<T, Size>, std::array<T, Size * 2>)
-  -> CircularDma<T, Size>;
+template<DmaDirection Direction, int NChannels, typename T, size_t Size>
+auto make_circulardma(std::span<T, Size> memoryData,
+                      std::span<T, static_cast<long>(Size) * 2> periphData)
+  -> CircularDma<Direction, NChannels, T, Size>
+{
+    return CircularDma<Direction, NChannels, T, Size>(memoryData, periphData);
+}

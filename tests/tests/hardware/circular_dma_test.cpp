@@ -25,7 +25,8 @@ TEST(CircularDma, WriteToDoubleBuffer)
     std::array<uint16_t, memBufSize> memData = { 0 };
     // Data for the peripheral
     std::array<uint16_t, periphBufSize> periphData = { 0 };
-    CircularDma dma(memData, periphData);
+    auto dma = make_circulardma<DmaDirection::MemoryToPeripheral>(
+      std::span(memData), std::span(periphData));
 
     InterruptHandler fakeHalfCompleteCallback;
     InterruptHandler fakeCompleteCallback;
@@ -39,7 +40,7 @@ TEST(CircularDma, WriteToDoubleBuffer)
     // (1) Do processing... copy data
     uint16_t newValue = 1;
     mock_operation<uint16_t>(memData, newValue);
-    dma.execute<DmaDirection::MemoryToPeripheral>();
+    dma.execute();
     EXPECT_FALSE(dma.isReady());
     auto firstHalf = periphData | std::views::take(periphData.size() / 2);
     auto lastHalf = periphData | std::views::drop(periphData.size() / 2);
@@ -54,7 +55,7 @@ TEST(CircularDma, WriteToDoubleBuffer)
     oldValue = newValue;
     newValue = UINT16_MAX;
     mock_operation<uint16_t>(memData, newValue);
-    dma.execute<DmaDirection::MemoryToPeripheral>();
+    dma.execute();
 
     EXPECT_FALSE(dma.isReady());
     EXPECT_THAT(firstHalf, testing::Each(testing::Eq(newValue)));
@@ -67,7 +68,7 @@ TEST(CircularDma, WriteToDoubleBuffer)
     oldValue = newValue;
     newValue = UINT16_MAX / 2;
     mock_operation<uint16_t>(memData, newValue);
-    dma.execute<DmaDirection::MemoryToPeripheral>();
+    dma.execute();
     EXPECT_FALSE(dma.isReady());
     EXPECT_THAT(firstHalf, testing::Each(testing::Eq(oldValue)));
     EXPECT_THAT(lastHalf, testing::Each(testing::Eq(newValue)));
@@ -83,11 +84,17 @@ TEST(MultiChannelDma, Deinterleave) // PeripheralToMemory
     constexpr size_t periphBufSize = memBufSize * 2;
     std::array<uint16_t, memBufSize> memData{};
     std::array<uint16_t, periphBufSize> periphData{};
-    CircularDma<uint16_t, memBufSize, nChannels> dma(memData, periphData);
+    auto dma = make_circulardma<DmaDirection::PeripheralToMemory, nChannels>(
+      std::span(memData), std::span(periphData));
 
     // Initialize the peripheral buffer
+    // Delineate between channel and front/back half
     for (auto [idx, data] : std::views::enumerate(periphData)) {
-        data = idx % nChannels;
+        if (idx < periphData.size() / 2) {
+            data = idx % nChannels;
+        } else {
+            data = (idx % nChannels) + 1;
+        }
     }
 
     InterruptHandler fakeHalfCompleteCallback;
@@ -99,21 +106,32 @@ TEST(MultiChannelDma, Deinterleave) // PeripheralToMemory
     fakeHalfCompleteCallback();
     EXPECT_TRUE(dma.isReady());
 
-    dma.execute<DmaDirection::PeripheralToMemory>();
-    // This is what the DMA manager should do
-    for (int channelIdx = 0; channelIdx < nChannels; channelIdx++) {
-        auto channelBuf =
-          std::span(&memData.at(channelIdx * channelBufSize), channelBufSize);
-        for (int sampleIdx = 0; sampleIdx < channelBufSize; sampleIdx++) {
-            channelBuf[sampleIdx] =
-              periphData.at((sampleIdx * nChannels) + channelIdx);
-        }
-    }
+    dma.execute();
+    // // This is what the DMA manager should do
+    // for (int channelIdx = 0; channelIdx < nChannels; channelIdx++) {
+    //     auto channelBuf =
+    //       std::span(&memData.at(channelIdx * channelBufSize),
+    //       channelBufSize);
+    //     for (int sampleIdx = 0; sampleIdx < channelBufSize; sampleIdx++) {
+    //         channelBuf[sampleIdx] =
+    //           periphData.at((sampleIdx * nChannels) + channelIdx);
+    //     }
+    // }
 
     for (auto i : std::views::iota(size_t(0), nChannels)) {
         EXPECT_THAT(memData | std::views::drop(i * channelBufSize) |
                       std::views::take(channelBufSize),
                     testing::Each(testing::Eq(i)));
+    }
+
+    EXPECT_FALSE(dma.isReady());
+    fakeCompleteCallback();
+    EXPECT_TRUE(dma.isReady());
+    dma.execute();
+    for (auto i : std::views::iota(size_t(0), nChannels)) {
+        EXPECT_THAT(memData | std::views::drop(i * channelBufSize) |
+                      std::views::take(channelBufSize),
+                    testing::Each(testing::Eq(i + 1)));
     }
 }
 
