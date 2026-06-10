@@ -35,7 +35,7 @@ enum class DmaDirection
  * @tparam NChannels The number of channels to be interleaved to the peripheral
  * or deinterleaved from the peripheral
  */
-template<DmaDirection Direction, int NChannels, typename T, int Size>
+template<DmaDirection Direction, int NChannels, typename T, size_t Size>
 class CircularDma
 {
 public:
@@ -111,9 +111,14 @@ public:
             // TODO: maybe make interleave/deinterleave iterators?
             if constexpr (Direction == MemoryToPeripheral) {
                 // TODO: make as below (and refactor)
-                for (int i = 0; i < Size; i++) {
-                    *std::next(outputBeginIt, (i * NChannels) % Size) =
-                      *std::next(inputBeginIt, i);
+                for (int channel = 0; channel < NChannels; channel++) {
+                    auto channelBuf =
+                      std::span(&*(inputBeginIt + (channel * channelBufSize)),
+                                channelBufSize);
+                    for (size_t sample = 0; sample < channelBufSize; sample++) {
+                        *(outputBeginIt + (sample * NChannels) + channel) =
+                          channelBuf[sample];
+                    }
                 }
             } else if constexpr (Direction == PeripheralToMemory) {
                 // TODO: refactor for cleanliness
@@ -121,7 +126,7 @@ public:
                     auto channelBuf =
                       std::span(&*(outputBeginIt + (channel * channelBufSize)),
                                 channelBufSize);
-                    for (int sample = 0; sample < channelBufSize; sample++) {
+                    for (size_t sample = 0; sample < channelBufSize; sample++) {
                         channelBuf[sample] =
                           *(inputBeginIt + (sample * NChannels) + channel);
                     }

@@ -90,7 +90,7 @@ TEST(MultiChannelDma, Deinterleave) // PeripheralToMemory
     // Initialize the peripheral buffer
     // Delineate between channel and front/back half
     for (auto [idx, data] : std::views::enumerate(periphData)) {
-        if (idx < periphData.size() / 2) {
+        if (idx < long(periphData.size()) / 2) {
             data = idx % nChannels;
         } else {
             data = (idx % nChannels) + 1;
@@ -102,28 +102,19 @@ TEST(MultiChannelDma, Deinterleave) // PeripheralToMemory
     fakeHalfCompleteCallback.connect<&decltype(dma)::setHalfCompleteFlag>(&dma);
     fakeCompleteCallback.connect<&decltype(dma)::setCompleteFlag>(&dma);
 
+    // Copy first half of peripheral buffer to memory
     EXPECT_FALSE(dma.isReady());
     fakeHalfCompleteCallback();
     EXPECT_TRUE(dma.isReady());
-
     dma.execute();
-    // // This is what the DMA manager should do
-    // for (int channelIdx = 0; channelIdx < nChannels; channelIdx++) {
-    //     auto channelBuf =
-    //       std::span(&memData.at(channelIdx * channelBufSize),
-    //       channelBufSize);
-    //     for (int sampleIdx = 0; sampleIdx < channelBufSize; sampleIdx++) {
-    //         channelBuf[sampleIdx] =
-    //           periphData.at((sampleIdx * nChannels) + channelIdx);
-    //     }
-    // }
-
     for (auto i : std::views::iota(size_t(0), nChannels)) {
         EXPECT_THAT(memData | std::views::drop(i * channelBufSize) |
                       std::views::take(channelBufSize),
                     testing::Each(testing::Eq(i)));
     }
 
+    // Copy second half of peripheral buffer to memory
+    // Note that now the value is increased by one
     EXPECT_FALSE(dma.isReady());
     fakeCompleteCallback();
     EXPECT_TRUE(dma.isReady());
@@ -137,5 +128,79 @@ TEST(MultiChannelDma, Deinterleave) // PeripheralToMemory
 
 TEST(MultiChannelDma, Interleave) // MemoryToPeripheral
 {
-    EXPECT_TRUE(false);
+    constexpr size_t nChannels = 10;
+    constexpr size_t channelBufSize = 100;
+    constexpr size_t memBufSize = nChannels * channelBufSize;
+    constexpr size_t periphBufSize = memBufSize * 2;
+    std::array<uint16_t, memBufSize> memData{};
+    std::array<uint16_t, periphBufSize> periphData{};
+    auto dma = make_circulardma<DmaDirection::MemoryToPeripheral, nChannels>(
+      std::span(memData), std::span(periphData));
+
+    InterruptHandler fakeHalfCompleteCallback;
+    InterruptHandler fakeCompleteCallback;
+    fakeHalfCompleteCallback.connect<&decltype(dma)::setHalfCompleteFlag>(&dma);
+    fakeCompleteCallback.connect<&decltype(dma)::setCompleteFlag>(&dma);
+
+    // Initialize the memory buffer
+    for (auto [idx, channel] :
+         std::views::enumerate(memData | std::views::chunk(channelBufSize))) {
+        for (auto& val : channel) {
+            val = (idx + 1) * 2;
+        }
+    }
+
+    // Initially assume DMA peripheral is operating on first half,
+    // copy memory to second half of peripheral buffer
+    EXPECT_TRUE(dma.isReady());
+    dma.execute();
+    EXPECT_FALSE(dma.isReady());
+
+    // Check second half of peripheral buffer
+    for (auto [idx, val] :
+         std::views::enumerate(periphData | std::views::drop(memBufSize))) {
+        EXPECT_EQ(val, (idx % nChannels + 1) * 2);
+    }
+
+    // Initialize the memory buffer for a second time with some other set of
+    // values
+    for (auto [idx, channel] :
+         std::views::enumerate(memData | std::views::chunk(channelBufSize))) {
+        for (auto& val : channel) {
+            val = (idx + 1);
+        }
+    }
+
+    // Copy memory to first half of peripheral buffer
+    fakeHalfCompleteCallback();
+    EXPECT_TRUE(dma.isReady());
+    dma.execute();
+    EXPECT_FALSE(dma.isReady());
+
+    // Check first half of buffer
+    for (auto [idx, val] :
+         std::views::enumerate(periphData | std::views::take(memBufSize))) {
+        EXPECT_EQ(val, (idx % nChannels) + 1);
+    }
+
+    // Initialize the memory buffer for a third time with some other set of
+    // values
+    for (auto [idx, channel] :
+         std::views::enumerate(memData | std::views::chunk(channelBufSize))) {
+        for (auto& val : channel) {
+            val = (idx + 5);
+        }
+    }
+
+    // Copy memory to second half of peripheral buffer
+    fakeCompleteCallback();
+    EXPECT_TRUE(dma.isReady());
+    dma.execute();
+    EXPECT_FALSE(dma.isReady());
+
+    // Check second half of buffer
+    for (auto [idx, val] :
+         std::views::enumerate(periphData | std::views::drop(memBufSize))) {
+        EXPECT_EQ(val, (idx % nChannels) + 5);
+    }
 }
