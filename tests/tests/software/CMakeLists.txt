@@ -1,7 +1,8 @@
 target_sources(ReusableSynthTests
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/task_test.cpp 
-        ${CMAKE_CURRENT_SOURCE_DIR}/wavetable_osc_test.cpp 
+        task_test.cpp 
+        wavetable_osc_test.cpp
+        graph_test.cpp 
     # PUBLIC
         # FILE_SET HEADERS 
         # FILES 

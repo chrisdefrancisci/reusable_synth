@@ -3,6 +3,7 @@ target_sources(ReusableSynthInterface
     PUBLIC
         FILE_SET HEADERS 
         FILES 
+            graph.hpp
             task.hpp
             wavetable_osc.hpp
 )
