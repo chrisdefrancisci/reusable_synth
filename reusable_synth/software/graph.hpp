@@ -12,6 +12,7 @@
 #include <functional>
 #include <memory_resource>
 #include <span>
+#include <utility>
 #include <vector>
 
 template<typename DataType, size_t Size>
@@ -105,3 +106,19 @@ private:
     std::array<DataType, Size> outputBuff{};
     std::pmr::vector<int> consumers;
 };
+
+/**
+ * @brief Helper function to create an object in the memory resource.
+ *
+ * @tparam T The object type (i.e., something derived from VertexInterface)
+ * @tparam Args Argument types to T's constructor
+ * @param mem The memory buffer resource
+ * @param args Arguments to T's constructor
+ * @return T* Pointer to the new object
+ */
+template<typename T, typename... Args>
+auto make_vertex(std::pmr::memory_resource* mem, Args&&... args) -> T*
+{
+    std::pmr::polymorphic_allocator<> alloc{ mem };
+    return alloc.new_object<T>(std::forward<Args>(args)..., mem);
+}

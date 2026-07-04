@@ -65,8 +65,8 @@ TEST(GraphTest, ExecutesDependentVertices)
 
     // Create two vertices
     std::pmr::vector<VertexInterface<Type, size>*> vec(&mbr);
-    vec.push_back(pmr.new_object<SisoVertex<Type, size>>(vec.size(), &mbr));
-    vec.push_back(pmr.new_object<SisoVertex<Type, size>>(vec.size(), &mbr));
+    vec.push_back(make_vertex<SisoVertex<Type, size>>(&mbr, vec.size()));
+    vec.push_back(make_vertex<SisoVertex<Type, size>>(&mbr, vec.size()));
 
     // At the start, neither vertex should have consumers
     ASSERT_EQ(vec[0]->getConsumers().size(), 0);
