@@ -16,16 +16,16 @@ using Type = float;
 constexpr int size = 100;
 
 template<typename DataType, size_t Size>
-class SisoVertex : public VertexInterface<DataType, Size>
+class DoubleInput : public VertexInterface<DataType, Size>
 {
 public:
     using typename VertexInterface<DataType, Size>::ConnectFunc;
 
-    SisoVertex(int id, std::pmr::memory_resource* mem)
+    DoubleInput(int id, std::pmr::memory_resource* mem)
       : VertexInterface<DataType, Size>(id, mem)
     {
         inputs.push_back(
-          static_cast<ConnectFunc>(&SisoVertex<DataType, Size>::connect));
+          static_cast<ConnectFunc>(&DoubleInput<DataType, Size>::connect));
     }
 
     [[nodiscard]] auto getInputs() const
@@ -49,7 +49,7 @@ private:
     {
         // I believe we need to static cast here because this will be invoked
         // using a VertexInterface pointer
-        static_cast<SisoVertex<DataType, Size>*>(this)->inputBuff = outputBuff;
+        static_cast<DoubleInput<DataType, Size>*>(this)->inputBuff = outputBuff;
     }
     std::pmr::vector<ConnectFunc> inputs;
 };
@@ -58,15 +58,17 @@ TEST(GraphTest, ExecutesDependentVertices)
 {
     // In this case, we do not create a whole graph and instead just use vector
     // of vertices directly
-    std::array<uint8_t, 1024> arena{};
+    std::array<uint8_t, 8194> arena{};
     std::pmr::monotonic_buffer_resource mbr(
       arena.data(), arena.size(), std::pmr::null_memory_resource());
     std::pmr::polymorphic_allocator<> pmr(&mbr);
 
     // Create two vertices
     std::pmr::vector<VertexInterface<Type, size>*> vec(&mbr);
-    vec.push_back(make_vertex<SisoVertex<Type, size>>(&mbr, vec.size()));
-    vec.push_back(make_vertex<SisoVertex<Type, size>>(&mbr, vec.size()));
+    vec.reserve(10);
+    std::pmr::polymorphic_allocator<> alloc{ &mbr };
+    vec.push_back(make_vertex<DoubleInput<Type, size>>(&mbr, vec.size()));
+    vec.push_back(make_vertex<DoubleInput<Type, size>>(&mbr, vec.size()));
 
     // At the start, neither vertex should have consumers
     ASSERT_EQ(vec[0]->getConsumers().size(), 0);
@@ -120,7 +122,22 @@ TEST(GraphTest, ExecutesDependentVertices)
     }
 }
 
-TEST(GraphTest, DependentVerticesGetData)
+TEST(GraphTest, SortSISO)
 {
-    EXPECT_TRUE(false);
+    std::array<uint8_t, 8194> arena{};
+    std::pmr::monotonic_buffer_resource mbr(
+      arena.data(), arena.size(), std::pmr::null_memory_resource());
+    Graph<Type, size> graph(&mbr);
+    for (int i = 0; i < 10; ++i) {
+        graph.addVertex<DoubleInput<Type, size>>();
+        if (i > 0) {
+            graph.addEdge(i, i - 1, graph[i]->getInputs().back());
+        }
+    }
+
+    auto sorted = topological_sort(graph, &mbr);
+
+    for (int i = 0; i < 10; ++i) {
+        EXPECT_EQ(sorted[i], graph[10 - 1 - i]);
+    }
 }
