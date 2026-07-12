@@ -1,7 +1,7 @@
 /**
  * @file graph.hpp
  * @author Chris DeFrancisci (chrisdefrancisci@gmail.com)
- * @brief Contains classes to implement a graph in order to sort nodes by
+ * @brief Contains classes to implement a graph in order to sort vertices by
  * dependencies.
  * @date 2026-06-24
  */
@@ -48,7 +48,7 @@ public:
      *
      * @return std::span<DataType, Size> Output buffer
      */
-    [[nodiscard]] auto getOutput() -> std::span<const DataType, Size>
+    [[nodiscard]] auto getOutput() const -> std::span<const DataType, Size>
     {
         return std::span(outputBuff);
     }
@@ -140,7 +140,7 @@ auto make_vertex(std::pmr::memory_resource* mem, Args&&... args) -> T*
 }
 
 template<typename DataType, size_t Size>
-class Graph : Noncopyable
+class Graph
 {
 public:
     using VertexType = VertexInterface<DataType, Size>;
@@ -150,6 +150,17 @@ public:
       , mem(mem)
     {
     }
+    ~Graph()
+    {
+        for (auto& vertex : std::ranges::reverse_view(adjacencyList)) {
+            vertex->~VertexInterface();
+        }
+    }
+
+    Graph(const Graph&) = delete;
+    Graph(Graph&&) = delete;
+    auto operator=(const Graph&) -> Graph& = delete;
+    auto operator=(Graph&&) -> Graph& = delete;
 
     template<typename T, typename... Args>
     auto addVertex(Args&&... args) -> size_t
@@ -167,17 +178,20 @@ public:
 
     [[nodiscard]] auto size() const -> size_t { return adjacencyList.size(); }
 
-    void addEdge(size_t producer, size_t consumer, VertexType::ConnectFunc func)
+    void addEdge(size_t producer,
+                 size_t consumer,
+                 VertexType::ConnectFunc consumerInput)
     {
-        addEdge(adjacencyList[producer], adjacencyList[consumer], func);
+        addEdge(
+          adjacencyList[producer], adjacencyList[consumer], consumerInput);
     }
 
 private:
     void addEdge(VertexPtr producer,
                  VertexPtr consumer,
-                 VertexType::ConnectFunc func)
+                 VertexType::ConnectFunc consumerInput)
     {
-        producer->addConsumer(consumer, func);
+        producer->addConsumer(consumer, consumerInput);
     }
     std::pmr::vector<VertexPtr> adjacencyList;
     std::pmr::memory_resource* mem;
@@ -233,7 +247,8 @@ auto topological_sort(const Graph<DataType, Size>& graph,
         }
 
         // We have reached a vertex that either has no dependents or all
-        // dependents have already been added. Add it to the start of the list.
+        // dependents have already been added. Add it to the start of the
+        // list.
         marked[vertex] = Mark::Permanent;
         sorted.insert(sorted.begin(), graph[vertex]);
 
