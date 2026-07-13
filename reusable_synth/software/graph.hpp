@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "reusable_synth/utils/noncopyable.hpp"
-
 #include <array>
 #include <functional>
 #include <memory_resource>
@@ -19,125 +17,8 @@
 #include <utility>
 #include <vector>
 
-/**
- * @brief
- *
- * @todo: The way this is currently structured takes a ton of memory. Should
- * look into an algorithm to determine how many simultaneous computation buffers
- * are needed.
- * @tparam DataType
- * @tparam Size
- */
-template<typename DataType, size_t Size>
-class VertexInterface : Noncopyable
-{
-public:
-    using ConnectFunc = void (VertexInterface<DataType, Size>::*)(
-      std::span<const DataType, Size>);
-
-    VertexInterface(int id, std::pmr::memory_resource* mem)
-      : id(id)
-      , consumers(mem)
-    {
-    }
-
-    virtual ~VertexInterface() = default;
-
-    /**
-     * @brief Get a non-owning view to the vertex's output buffer
-     *
-     * @return std::span<DataType, Size> Output buffer
-     */
-    [[nodiscard]] auto getOutput() const -> std::span<const DataType, Size>
-    {
-        return std::span(outputBuff);
-    }
-
-    /**
-     * @brief Get the ID of the vertex object
-     *
-     * @return int ID
-     */
-    [[nodiscard]] auto getId() const -> int { return id; }
-
-    /**
-     * @brief Provides the output buffer of this algorithm to be used as an
-     * algorithm input.
-     *
-     * In the Directed Acyclic Graph, each consumer is a vertex with a directed
-     * edge \a from this vertex \a to the consumer vertices.
-     *
-     * @param other A vertex dependent on this vertex.
-     * @param connect Function that registers the output buffer of this vertex
-     * as an input to the consumer vertex.
-     */
-    void addConsumer(VertexInterface<DataType, Size>* other,
-                     ConnectFunc connect)
-    {
-        std::invoke(connect, other, getOutput());
-        consumers.push_back(other->id);
-    }
-
-    /**
-     * @brief Get the vector of vertices that consume this vertex's output.
-     *
-     * @return const std::pmr::vector<int>& Vector of dependent vertices.
-     */
-    [[nodiscard]] auto getConsumers() const -> const std::pmr::vector<int>&
-    {
-        return consumers;
-    }
-
-    /**
-     * @brief Returns the list of functions that will connect a buffer to an
-     * algorithm input.
-     *
-     * @return std::pmr::vector<ConnectFunc>
-     */
-    virtual auto getInputs() const -> const std::pmr::vector<ConnectFunc>& = 0;
-
-    /**
-     * @brief Executes the algorithm associated with this vertex, reading
-     * input data and writing it to the output buffer.
-     *
-     */
-    virtual void execute() = 0;
-
-protected:
-    /**
-     * @brief Get a non-owning view to the vertex's output buffer
-     *
-     * @return std::span<DataType, Size> Output buffer
-     */
-    [[nodiscard]] auto getOutput(size_t i) -> DataType&
-    {
-        return outputBuff[i];
-    }
-
-private:
-    int id;
-    std::array<DataType, Size> outputBuff{};
-    std::pmr::vector<int> consumers;
-};
-
-/**
- * @brief Helper function to create a vertex in the memory resource.
- *
- * All this really does is enforce the pattern of the vertex arguments called
- * first followed by the pmr argument.
- *
- * @tparam T The object type (i.e., something derived from VertexInterface)
- * @tparam Args Argument types to T's constructor
- * @param mem The memory buffer resource
- * @param args Arguments to T's constructor
- * @return T* Pointer to the new object
- */
-template<typename T, typename... Args>
-auto make_vertex(std::pmr::memory_resource* mem, Args&&... args) -> T*
-{
-    std::pmr::polymorphic_allocator<> alloc{ mem };
-    return alloc.new_object<T>(std::forward<Args>(args)..., mem);
-}
+#include <reusable_synth/utils/noncopyable.hpp>
+#include <reusable_synth/software/vertex_interface.hpp>
 
 template<typename DataType, size_t Size>
 class Graph
@@ -150,6 +31,7 @@ public:
       , mem(mem)
     {
     }
+
     ~Graph()
     {
         for (auto& vertex : std::ranges::reverse_view(adjacencyList)) {
@@ -162,6 +44,14 @@ public:
     auto operator=(const Graph&) -> Graph& = delete;
     auto operator=(Graph&&) -> Graph& = delete;
 
+    /**
+     * @brief Adds a vertex of type T.
+     * 
+     * @tparam T Vertex type.
+     * @tparam Args Vertex constructor argument types.
+     * @param args Vertex constructor arguments, excluding the vertex position.
+     * @return size_t The position of the vertex in the underlying adjacency list.
+     */
     template<typename T, typename... Args>
     auto addVertex(Args&&... args) -> size_t
     {
@@ -171,6 +61,14 @@ public:
         return pos;
     }
 
+    /**
+     * @brief Helper to access vertex in the adjacencyList.
+     * 
+     * Does not check bounds.
+     * 
+     * @param pos Position to access.
+     * @return VertexPtr Pointer to the vertex.
+     */
     [[nodiscard]] auto operator[](size_t pos) const -> VertexPtr
     {
         return adjacencyList[pos];
@@ -178,6 +76,13 @@ public:
 
     [[nodiscard]] auto size() const -> size_t { return adjacencyList.size(); }
 
+    /**
+     * @brief Adds a directed edge between to vertices.
+     * 
+     * @param producer The vertex that produces data.
+     * @param consumer The vertex that consumes data.
+     * @param consumerInput The consumer's callback, which connects the producer's output to (one of) the consumer's input(s).
+     */
     void addEdge(size_t producer,
                  size_t consumer,
                  VertexType::ConnectFunc consumerInput)
@@ -198,16 +103,16 @@ private:
 };
 
 /**
- * @brief Computes
+ * @brief Computes a topologically sorted ordering of vertices in the graph.
  *
  * @see <a
  href="https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search">
  Depth First Search</a>
- * @tparam DataType
- * @tparam Size
- * @param graph
- * @param mem
- * @return std::pmr::vector<VertexInterface<DataType, Size>*>
+ * @tparam DataType Graph datatype
+ * @tparam Size Vertex sizes
+ * @param graph The graph to sort.
+ * @param mem Memory resource to hold the sorted vector.
+ * @return std::pmr::vector<VertexInterface<DataType, Size>*> Sorted vertices.
  */
 template<typename DataType, size_t Size>
 auto topological_sort(const Graph<DataType, Size>& graph,
