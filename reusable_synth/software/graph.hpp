@@ -17,15 +17,28 @@
 #include <utility>
 #include <vector>
 
-#include <reusable_synth/utils/noncopyable.hpp>
 #include <reusable_synth/software/vertex_interface.hpp>
+#include <reusable_synth/utils/noncopyable.hpp>
 
+/**
+ * @brief A Graph owns / manages the lifetime of a collection of vertices.
+ *
+ * @tparam DataType Type used by the nodes
+ * @tparam Size Size of the data used by the nodes.
+ */
 template<typename DataType, size_t Size>
 class Graph
 {
 public:
     using VertexType = VertexInterface<DataType, Size>;
     using VertexPtr = VertexType*;
+
+    /**
+     * @brief Construct a new Graph object
+     *
+     * @param mem Memory resource where the vertices, adjacency list, etc. will
+     * live.
+     */
     explicit Graph(std::pmr::memory_resource* mem)
       : adjacencyList(mem)
       , mem(mem)
@@ -46,11 +59,12 @@ public:
 
     /**
      * @brief Adds a vertex of type T.
-     * 
+     *
      * @tparam T Vertex type.
      * @tparam Args Vertex constructor argument types.
      * @param args Vertex constructor arguments, excluding the vertex position.
-     * @return size_t The position of the vertex in the underlying adjacency list.
+     * @return size_t The position of the vertex in the underlying adjacency
+     * list.
      */
     template<typename T, typename... Args>
     auto addVertex(Args&&... args) -> size_t
@@ -63,9 +77,9 @@ public:
 
     /**
      * @brief Helper to access vertex in the adjacencyList.
-     * 
+     *
      * Does not check bounds.
-     * 
+     *
      * @param pos Position to access.
      * @return VertexPtr Pointer to the vertex.
      */
@@ -78,10 +92,11 @@ public:
 
     /**
      * @brief Adds a directed edge between to vertices.
-     * 
+     *
      * @param producer The vertex that produces data.
      * @param consumer The vertex that consumes data.
-     * @param consumerInput The consumer's callback, which connects the producer's output to (one of) the consumer's input(s).
+     * @param consumerInput The consumer's callback, which connects the
+     * producer's output to (one of) the consumer's input(s).
      */
     void addEdge(size_t producer,
                  size_t consumer,

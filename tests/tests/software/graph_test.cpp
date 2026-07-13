@@ -1,6 +1,6 @@
+#include <array>
 #include <cmath>
 #include <functional>
-#include <array>
 #include <memory_resource>
 #include <ranges>
 #include <span>
@@ -16,7 +16,6 @@ using namespace testing;
 using Type = float;
 /** Computation buffer size */
 constexpr int size = 10;
-
 
 TEST(GraphTest, SortSingleInput)
 {

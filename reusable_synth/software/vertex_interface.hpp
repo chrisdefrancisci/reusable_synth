@@ -1,7 +1,7 @@
 /**
  * @file vertex_interface.hpp
  * @author Chris DeFrancisci (chrisdefrancisici@gmail.com)
- * @brief 
+ * @brief
  * @date 2026-07-12
  */
 
@@ -17,9 +17,11 @@
 
 #include "reusable_synth/utils/noncopyable.hpp"
 
-
 /**
- * @brief
+ * @brief Abstract interface for wrapping algorithms.
+ *
+ * Used by the graph class to ensure algorithms with dependencies are executed
+ * after their dependencies.
  *
  * @todo: The way this is currently structured takes a ton of memory. Should
  * look into an algorithm to determine how many simultaneous computation buffers

@@ -1,10 +1,21 @@
 /**
  * @file fake_vertices.hpp
  * @author Chris DeFrancisci (chrisdefrancisici@gmail.com)
- * @brief 
+ * @brief Simplified vertex algorithms that don't really do anything
  */
 
- template<typename DataType, size_t Size>
+#include <reusable_synth/software/vertex_interface.hpp>
+
+/**
+ * @brief A vertex that uses a function object to initialize all of its
+ * elements.
+ *
+ * Does not consume any data.
+ *
+ * @tparam DataType The data type of computations.
+ * @tparam Size The number of data points.
+ */
+template<typename DataType, size_t Size>
 class InitialVertex : public VertexInterface<DataType, Size>
 {
 public:
@@ -35,6 +46,12 @@ private:
     std::pmr::vector<ConnectFunc> inputs;
 };
 
+/**
+ * @brief A vertex that doubles the input it consumes.
+ *
+ * @tparam DataType The data type of computations.
+ * @tparam Size The number of data points.
+ */
 template<typename DataType, size_t Size>
 class DoubleInput : public VertexInterface<DataType, Size>
 {
@@ -74,6 +91,12 @@ private:
     std::pmr::vector<ConnectFunc> inputs;
 };
 
+/**
+ * @brief A vertex that consumes two inputs and produces their product.
+ *
+ * @tparam DataType The data type of computations.
+ * @tparam Size The number of data points.
+ */
 template<typename DataType, size_t Size>
 class MultiplyInputs : public VertexInterface<DataType, Size>
 {
