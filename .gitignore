@@ -12,3 +12,5 @@ build-tests
 .vscode/settings.json
 .vscode/settings.json
 compile_commands.json
+html/
+latex/
