@@ -31,9 +31,9 @@ public:
     }
 
     [[nodiscard]] auto getInputs() const
-      -> const std::pmr::vector<ConnectFunc>& override
+      -> std::span<const ConnectFunc> override
     {
-        return inputs; // Should be empty
+        return std::span<const ConnectFunc>{}; // Should be empty
     }
 
     /**
@@ -43,7 +43,6 @@ public:
     void execute() override {}
 
 private:
-    std::pmr::vector<ConnectFunc> inputs;
 };
 
 /**
@@ -61,12 +60,10 @@ public:
     DoubleInput(int id, std::pmr::memory_resource* mem)
       : VertexInterface<DataType, Size>(id, mem)
     {
-        inputs.push_back(
-          static_cast<ConnectFunc>(&DoubleInput<DataType, Size>::input));
     }
 
     [[nodiscard]] auto getInputs() const
-      -> const std::pmr::vector<ConnectFunc>& override
+      -> std::span<const ConnectFunc> override
     {
         return inputs;
     }
@@ -88,7 +85,8 @@ private:
         // using a VertexInterface pointer
         static_cast<DoubleInput<DataType, Size>*>(this)->inputBuff = outputBuff;
     }
-    std::pmr::vector<ConnectFunc> inputs;
+    std::array<ConnectFunc, 1> inputs{ static_cast<ConnectFunc>(
+      &DoubleInput<DataType, Size>::input) };
 };
 
 /**
@@ -109,14 +107,10 @@ public:
     MultiplyInputs(int id, std::pmr::memory_resource* mem)
       : VertexInterface<DataType, Size>(id, mem)
     {
-        inputs.push_back(
-          static_cast<ConnectFunc>(&MultiplyInputs<DataType, Size>::inputA));
-        inputs.push_back(
-          static_cast<ConnectFunc>(&MultiplyInputs<DataType, Size>::inputB));
     }
 
     [[nodiscard]] auto getInputs() const
-      -> const std::pmr::vector<ConnectFunc>& override
+      -> std::span<const ConnectFunc> override
     {
         return inputs;
     }
@@ -147,5 +141,8 @@ private:
           outputBuff;
     }
 
-    std::pmr::vector<ConnectFunc> inputs;
+    std::array<ConnectFunc, 2> inputs{
+        static_cast<ConnectFunc>(&MultiplyInputs<DataType, Size>::inputA),
+        static_cast<ConnectFunc>(&MultiplyInputs<DataType, Size>::inputB)
+    };
 };

@@ -8,12 +8,13 @@
 #pragma once
 
 // Standard library includes
-#include "reusable_synth/utils/noncopyable.hpp"
 #include <algorithm>
 #include <array>
 #include <chrono>
 #include <memory>
 #include <type_traits>
+
+#include "reusable_synth/utils/noncopyable.hpp"
 
 namespace detail {
 /**

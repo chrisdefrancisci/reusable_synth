@@ -84,9 +84,9 @@ public:
      *
      * @return const std::pmr::vector<int>& Vector of dependent vertices.
      */
-    [[nodiscard]] auto getConsumers() const -> const std::pmr::vector<int>&
+    [[nodiscard]] auto getConsumers() const -> std::span<const int>
     {
-        return consumers;
+        return std::span<const int>(consumers);
     }
 
     /**
@@ -95,7 +95,7 @@ public:
      *
      * @return std::pmr::vector<ConnectFunc>
      */
-    virtual auto getInputs() const -> const std::pmr::vector<ConnectFunc>& = 0;
+    virtual auto getInputs() const -> std::span<const ConnectFunc> = 0;
 
     /**
      * @brief Executes the algorithm associated with this vertex, reading
