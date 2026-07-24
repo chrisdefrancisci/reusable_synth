@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <numbers>
+#include <optional>
 #include <span>
 
 /**
@@ -125,14 +126,33 @@ public:
     {
     }
 
-    void setFrequency(float frequency, float sampleRate)
+    [[nodiscard]] auto getFrequency() const -> float { return frequency; }
+
+    constexpr void setFrequency(
+      float newFrequency,
+      std::optional<float> newSampleRate = std::nullopt)
     {
+        if (newSampleRate.has_value()) {
+            sampleRate = newSampleRate.value();
+        }
+        frequency = newFrequency;
         delta = float(wavetable.size()) * frequency / sampleRate;
     }
 
-    void increment(T& out)
+    /**
+     * @brief
+     *
+     * @param out
+     * @param phase
+     * @todo what units should phase have??
+     */
+    void increment(T& out, float phase = 0.0F)
     {
-        auto index0 = (unsigned int)fractionalIndex;
+        float phaseOffset = float(wavetable.size()) * phase / sampleRate;
+        auto index0 = (unsigned int)(fractionalIndex + phase);
+        if (index0 > wavetable.size()) {
+            index0 -= wavetable.size();
+        }
         auto index1 =
           index0 + 1 == wavetable.size() ? (unsigned int)0 : index0 + 1;
         float frac = fractionalIndex - float(index0);
@@ -144,17 +164,20 @@ public:
         }
     }
 
-    void increment(std::span<T> out)
+    void increment(std::span<T> out, float phase = 0.0F)
     {
         for (auto& sample : out) {
-            increment(sample);
+            increment(sample, phase);
         }
     }
 
 private:
+    static constexpr float defaultSampleRate = 96000.0F;
     std::span<const T> wavetable;
     float fractionalIndex{};
     float delta{};
+    float frequency{};
+    float sampleRate{ defaultSampleRate };
 };
 
 template<typename T>

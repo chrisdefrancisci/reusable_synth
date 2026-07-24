@@ -120,6 +120,8 @@ private:
 /**
  * @brief Computes a topologically sorted ordering of vertices in the graph.
  *
+ * @todo do we really want to create a new vector every time this is called?
+ * maybe taking in a location to place the sorted vertices would be better.
  * @see <a
  href="https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search">
  Depth First Search</a>

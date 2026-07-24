@@ -79,11 +79,12 @@ public:
 private:
     std::span<const DataType>
       inputBuff{}; // Fixed size span does not have default ctor
-    void input(std::span<const DataType, Size> outputBuff)
+    void input(std::span<const DataType, Size> otherOutputBuff)
     {
         // I believe we need to static cast here because this will be invoked
         // using a VertexInterface pointer
-        static_cast<DoubleInput<DataType, Size>*>(this)->inputBuff = outputBuff;
+        static_cast<DoubleInput<DataType, Size>*>(this)->inputBuff =
+          otherOutputBuff;
     }
     std::array<ConnectFunc, 1> inputs{ static_cast<ConnectFunc>(
       &DoubleInput<DataType, Size>::input) };

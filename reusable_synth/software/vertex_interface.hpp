@@ -47,6 +47,8 @@ public:
     /**
      * @brief Get a non-owning view to the vertex's output buffer
      *
+     * @todo move getOutput() into fake_vertices - there's no real-world use
+     * case for being able to arbitrarily peek into the buffer.
      * @return std::span<DataType, Size> Output buffer
      */
     [[nodiscard]] auto getOutput() const -> std::span<const DataType, Size>
@@ -108,6 +110,7 @@ protected:
     /**
      * @brief Get a non-owning view to the vertex's output buffer
      *
+     * @todo delete in VertexInterface::outputBuff refactor
      * @return std::span<DataType, Size> Output buffer
      */
     [[nodiscard]] auto getOutput(size_t i) -> DataType&
@@ -115,8 +118,21 @@ protected:
         return outputBuff[i];
     }
 
+    /**
+     * @brief Get the outputBuff.begin()
+     *
+     * @todo delete in VertexInterface::outputBuff refactor
+     * @return std::array<Datatype, Size>::iterator
+     */
+    auto getOutputBegin() -> std::array<Datatype, Size>::iterator
+    {
+        return outputBuff.begin();
+    }
+
 private:
     int id;
+    // TODO: mandating that each implementation has to have its own array is
+    // terrible
     std::array<DataType, Size> outputBuff{};
     std::pmr::vector<int> consumers;
 };
