@@ -92,6 +92,7 @@ struct SineWavetable
 {
 private:
     static constexpr float sineAmplitude = 2.0;
+    static constexpr float twopi = 2.0 * std::numbers::pi_v<float>;
 
 public:
     /**
@@ -104,8 +105,7 @@ public:
       : data()
     {
         for (int i = 0; i < Period; i++) {
-            float raw = std::sin(std::numbers::pi_v<float> * sineAmplitude *
-                                 (float)i / Period);
+            float raw = std::sin(twopi * (float)i / Period);
             data[i] =
               T(((raw + 1.0F) * float(max - min) / sineAmplitude) + min);
         }
@@ -120,6 +120,9 @@ public:
 template<typename T>
 class WavetableOsc
 {
+private:
+    static constexpr float twopi = 2.0 * std::numbers::pi_v<float>;
+
 public:
     explicit WavetableOsc(const std::span<const T> wavetable)
       : wavetable(wavetable)
@@ -143,19 +146,23 @@ public:
      * @brief
      *
      * @param out
-     * @param phase
-     * @todo what units should phase have??
+     * @param phase in radians
      */
     void increment(T& out, float phase = 0.0F)
     {
-        float phaseOffset = float(wavetable.size()) * phase / sampleRate;
-        auto index0 = (unsigned int)(fractionalIndex + phase);
-        if (index0 > wavetable.size()) {
+        // Convert phase in radians to sampled table
+        phase = phase < 0 ? phase + twopi : phase;
+        float phaseOffset = float(wavetable.size()) * phase / twopi;
+        auto index0 = (unsigned int)(fractionalIndex + phaseOffset);
+        if (index0 >= wavetable.size()) {
             index0 -= wavetable.size();
         }
         auto index1 =
           index0 + 1 == wavetable.size() ? (unsigned int)0 : index0 + 1;
-        float frac = fractionalIndex - float(index0);
+        float frac = fractionalIndex + phaseOffset - float(index0);
+        if (frac >= wavetable.size()) {
+            frac -= wavetable.size();
+        }
         out = wavetable[index0] +
               (frac * (float(wavetable[index1]) - float(wavetable[index0])));
         fractionalIndex += delta;

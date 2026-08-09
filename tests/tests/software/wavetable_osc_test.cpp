@@ -93,3 +93,26 @@ TEST(WavetableOscTest, SineWaveIntAtFsOver8)
 
     EXPECT_THAT(out, Pointwise(Eq(), truth));
 }
+
+TEST(WavetableOscTest, CosineWaveAtFsOver8)
+{
+    constexpr float samplingFreq = 44100;
+    constexpr float oscFreq = samplingFreq / 8;
+    constexpr int length = 32;
+    constexpr float phase = std::numbers::pi_v<float> / 2.0F;
+    SineWavetable<float, length> sineWavetable(-1, 1);
+    WavetableOsc osc(sineWavetable.data);
+
+    constexpr int nSamples = 8; // number of samples in a period
+    std::array<float, 9> truth{};
+    for (int n = 0; auto& item : truth) {
+        item =
+          std::cos(2.0F * std::numbers::pi_v<float> * float(n++) / (nSamples));
+    }
+
+    decltype(truth) out;
+    osc.setFrequency(oscFreq, samplingFreq);
+    osc.increment(out, phase);
+
+    EXPECT_THAT(out, Pointwise(FloatNear(0.001), truth));
+}

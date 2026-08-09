@@ -124,7 +124,7 @@ protected:
      * @todo delete in VertexInterface::outputBuff refactor
      * @return std::array<Datatype, Size>::iterator
      */
-    auto getOutputBegin() -> std::array<Datatype, Size>::iterator
+    auto getOutputBegin() -> std::array<DataType, Size>::iterator
     {
         return outputBuff.begin();
     }
