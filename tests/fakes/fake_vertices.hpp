@@ -82,9 +82,11 @@ private:
     void input(std::span<const DataType, Size> otherOutputBuff)
     {
         // I believe we need to static cast here because this will be invoked
-        // using a VertexInterface pointer
+        // using a VertexInterface pointer as an argument to a ConnectFunc
+        // TODO: do we need this static cast? Try a few tests and see.
         static_cast<DoubleInput<DataType, Size>*>(this)->inputBuff =
           otherOutputBuff;
+        // inputBuff = otherOutputBuff;
     }
     std::array<ConnectFunc, 1> inputs{ static_cast<ConnectFunc>(
       &DoubleInput<DataType, Size>::input) };

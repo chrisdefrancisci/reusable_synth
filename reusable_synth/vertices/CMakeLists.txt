@@ -3,6 +3,6 @@ target_sources(ReusableSynthInterface
     PUBLIC
         FILE_SET HEADERS
         FILES 
-            adc.hpp
-            frequency_modulation.hpp
+            # frequency_modulation.hpp
+            wavetable_osc.hpp
 )

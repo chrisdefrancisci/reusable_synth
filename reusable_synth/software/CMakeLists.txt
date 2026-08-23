@@ -6,5 +6,5 @@ target_sources(ReusableSynthInterface
             graph.hpp
             task.hpp
             vertex_interface.hpp
-            wavetable_osc.hpp
+            wavetables.hpp
 )

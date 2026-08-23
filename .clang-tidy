@@ -1,7 +1,7 @@
 # WarningsAsErrors: "*"
 # HeaderFilterRegex: .*
 # ExcludeHeaderFilterRegex: build/.*
-Checks: '-*, bugprone-*, clang-analyzer-*, cppcoreguidelines-*, modernize-*, readability-*'
+Checks: '-*, bugprone-*, -bugprone-easily-swappable-parameters, clang-analyzer-*, cppcoreguidelines-*, modernize-*, readability-*'
 CheckOptions:
 
   # Cpp Core Guidelines ###########################################################

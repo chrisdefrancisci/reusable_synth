@@ -25,7 +25,10 @@
  *
  * @todo: The way this is currently structured takes a ton of memory. Should
  * look into an algorithm to determine how many simultaneous computation buffers
- * are needed.
+ * are needed. This also means I could remove Size from the template, pass in
+ * output buffer instead. Would also want to Take another look at reconciling
+ * the interfaces between VertexInterface, make_vertex, and Graph::addVertex.
+ * Like, does the vertex even need to know that it has an ID? Probably not.
  * @tparam DataType
  * @tparam Size
  */

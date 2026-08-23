@@ -8,7 +8,7 @@
 #include <optional>
 
 #include <reusable_synth/software/vertex_interface.hpp>
-#include <reusable_synth/software/wavetable_osc.hpp>
+#include <reusable_synth/vertices/wavetable_osc.hpp>
 
 /**
  * @briefd
