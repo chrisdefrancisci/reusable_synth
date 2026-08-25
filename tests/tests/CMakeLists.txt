@@ -1,4 +1,5 @@
 add_subdirectory(hardware)
 add_subdirectory(middleware)
 add_subdirectory(software)
+add_subdirectory(vertices)
 add_subdirectory(utils)

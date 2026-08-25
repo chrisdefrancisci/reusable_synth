@@ -1,4 +1,5 @@
 add_subdirectory(fakes)
+add_subdirectory(fixtures)
 add_subdirectory(stubs)
 add_subdirectory(mocks)
 add_subdirectory(tests)

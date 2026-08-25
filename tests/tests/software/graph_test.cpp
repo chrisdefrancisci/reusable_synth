@@ -7,6 +7,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
 #include <reusable_synth/software/graph.hpp>
 #include <tests/fakes/fake_vertices.hpp>
 

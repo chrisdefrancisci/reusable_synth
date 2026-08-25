@@ -56,9 +56,11 @@ public:
     static constexpr size_t connectPhase = 1;
 
     explicit WavetableOsc(int id,
+                          float sampleRate,
                           const std::span<const DataType> wavetable,
                           std::pmr::memory_resource* mem)
       : VertexInterface<DataType, Size>(id, mem)
+      , sampleRate(sampleRate)
       , wavetable(wavetable)
     {
     }
@@ -79,25 +81,19 @@ public:
             return;
         }
 
-        auto out = this->getOutput();
+        auto out = this->getMutableOutput();
         if (inputPhaseBuff.empty()) {
-            for (auto& [sample, freq] : std::views::zip(out, frequency)) {
+            for (auto&& [sample, freq] : std::views::zip(out, inputFreqBuff)) {
                 setFrequency(convertFreq(freq));
                 increment(sample);
             }
         } else {
-            for (auto& [sample, freq, phase] :
+            for (auto&& [sample, freq, phase] :
                  std::views::zip(out, inputFreqBuff, inputPhaseBuff)) {
                 setFrequency(convertFreq(freq));
                 increment(sample, convertPhase(phase));
             }
         }
-    }
-
-    constexpr void setSampleRate(float newSampleRate)
-    {
-        sampleRate = newSampleRate;
-        delta = float(wavetable.size()) * frequency / sampleRate;
     }
 
 private:
@@ -154,14 +150,14 @@ private:
     }
 
     std::array<ConnectFunc, 2> inputs{
-        static_cast<ConnectFunc>(&WavetableOsc<DataType, Size>::inputFreqBuff),
-        static_cast<ConnectFunc>(&WavetableOsc<DataType, Size>::inputPhaseBuff)
+        static_cast<ConnectFunc>(&WavetableOsc<DataType, Size>::inputFreq),
+        static_cast<ConnectFunc>(&WavetableOsc<DataType, Size>::inputPhase)
     };
 
-    static constexpr float defaultSampleRate = 96000.0F;
+    static constexpr float defaultSampleRate = 96000.0F; // TODO: delete
+    float sampleRate;
     std::span<const DataType> wavetable;
     float fractionalIndex{};
     float delta{};
     float frequency{};
-    float sampleRate{ defaultSampleRate };
 };

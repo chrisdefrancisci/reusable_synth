@@ -8,7 +8,7 @@
 
 using namespace testing;
 
-TEST(WavetableOscTest, SquareWaveAtFsOver8)
+TEST(WavetableTest, SquareWave)
 {
     constexpr auto squareWavetable = SquareWavetable<float, 8>(-1.0F, 1.0F);
 
@@ -18,7 +18,7 @@ TEST(WavetableOscTest, SquareWaveAtFsOver8)
     EXPECT_THAT(squareWavetable.data, Pointwise(FloatEq(), truth));
 }
 
-TEST(WavetableOscTest, RampWave)
+TEST(WavetableTest, RampWave)
 {
     constexpr auto rampWavetable = RampWavetable<float, 8>(-1.0F, 1.0F);
 
@@ -27,7 +27,7 @@ TEST(WavetableOscTest, RampWave)
     EXPECT_THAT(rampWavetable.data, Pointwise(FloatNear(0.001), truth));
 }
 
-TEST(WavetableOscTest, RampWaveInt)
+TEST(WavetableTest, RampWaveInt)
 {
     constexpr auto rampWavetable = RampWavetable<int, 8>(0, 4);
 
@@ -36,7 +36,7 @@ TEST(WavetableOscTest, RampWaveInt)
     EXPECT_THAT(rampWavetable.data, Pointwise(Eq(), truth));
 }
 
-TEST(WavetableOscTest, SineWaveAtFsOver8)
+TEST(WavetableTest, SineWave)
 {
     constexpr int length = 8;
     SineWavetable<float, length> sineWavetable(-1, 1);
@@ -50,7 +50,7 @@ TEST(WavetableOscTest, SineWaveAtFsOver8)
     EXPECT_THAT(sineWavetable.data, Pointwise(FloatNear(0.001), truth));
 }
 
-TEST(WavetableOscTest, SineWaveIntAtFsOver8)
+TEST(WavetableTest, SineWaveInt)
 {
     constexpr int length = 8;
     SineWavetable<int, length> sineWavetable(0, 255);
@@ -59,31 +59,3 @@ TEST(WavetableOscTest, SineWaveIntAtFsOver8)
 
     EXPECT_THAT(sineWavetable.data, Pointwise(Eq(), truth));
 }
-
-// TEST(WavetableOscTest, CosineWaveAtFsOver8)
-// {
-//     constexpr float samplingFreq = 44100;
-//     constexpr float oscFreq = samplingFreq / 8;
-//     constexpr int length = 32;
-//     constexpr float phase = std::numbers::pi_v<float> / 2.0F;
-//     SineWavetable<float, length> sineWavetable(-1, 1);
-//     WavetableOsc osc(sineWavetable.data);
-
-//     constexpr int nSamples = 8; // number of samples in a period
-//     std::array<float, 9> truth{};
-//     for (int n = 0; auto& item : truth) {
-//         item =
-//           std::cos(2.0F * std::numbers::pi_v<float> * float(n++) /
-//           (nSamples));
-//     }
-
-//     decltype(truth) out;
-//     osc.setFrequency(oscFreq, samplingFreq);
-//     osc.increment(out, phase);
-
-//     EXPECT_THAT(out, Pointwise(FloatNear(0.001), truth));
-// }
-
-// TODO: not entirely sure I've proved out phase input sufficiently.
-//  May want to add a test where I feed in a triangle waveform into the phase
-//  input

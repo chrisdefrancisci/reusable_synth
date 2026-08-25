@@ -121,15 +121,9 @@ protected:
         return outputBuff[i];
     }
 
-    /**
-     * @brief Get the outputBuff.begin()
-     *
-     * @todo delete in VertexInterface::outputBuff refactor
-     * @return std::array<Datatype, Size>::iterator
-     */
-    auto getOutputBegin() -> std::array<DataType, Size>::iterator
+    [[nodiscard]] auto getMutableOutput() -> std::span<DataType, Size>
     {
-        return outputBuff.begin();
+        return std::span(outputBuff);
     }
 
 private:
