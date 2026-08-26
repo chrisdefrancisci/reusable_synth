@@ -22,6 +22,7 @@ class WavetableOsc : public VertexInterface<DataType, Size>
 private:
     static constexpr float twopi = 2.0F * std::numbers::pi_v<float>;
     static constexpr float minFreqChange = 2.0F / 127.0F * 0.03;
+    /** TODO: move these two functions into utils or something */
     static constexpr auto convertPhase(DataType in) -> DataType
     {
         DataType minIn = -1;
@@ -84,13 +85,15 @@ public:
         auto out = this->getMutableOutput();
         if (inputPhaseBuff.empty()) {
             for (auto&& [sample, freq] : std::views::zip(out, inputFreqBuff)) {
-                setFrequency(convertFreq(freq));
+                // setFrequency(convertFreq(freq));
+                setFrequency(freq);
                 increment(sample);
             }
         } else {
             for (auto&& [sample, freq, phase] :
                  std::views::zip(out, inputFreqBuff, inputPhaseBuff)) {
-                setFrequency(convertFreq(freq));
+                // setFrequency(convertFreq(freq));
+                setFrequency(freq);
                 increment(sample, convertPhase(phase));
             }
         }

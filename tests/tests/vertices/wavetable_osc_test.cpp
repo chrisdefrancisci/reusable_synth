@@ -10,9 +10,14 @@
 #include <reusable_synth/vertices/wavetable_osc.hpp>
 
 using namespace testing;
-// typedef GraphFixture WavetableOscTest; // NOLINT(modernize-use-using)
 static constexpr size_t size = 9;
 using WavetableOscTest = GraphFixture<float, size>;
+
+// Just a note to self since I always forget:
+// y[n] = sin(2 * pi * desired freq / sampling rate * table sampling rate /
+//            table freq * n)
+// = sin(2 *pi * N samples in table * desired freq / sampling rate * n)
+// if there is 1 single period in the N sample table
 
 TEST_F(WavetableOscTest, SquareWaveAtFsOver8)
 {
@@ -81,9 +86,8 @@ TEST_F(WavetableOscTest, CosineWaveAtFsOver8)
           std::cos(2.0F * std::numbers::pi_v<float> * float(n++) / (nSamples));
     }
 
-    std::array<float, size> out{};
     std::array<float, size> freq{};
-    freq.fill(0.5F);
+    freq.fill(oscFreq);
     std::array<float, size> phase{};
     phase.fill(0.5F); // pi/2 mapped from (-1, +1) to (-pi, +pi)
 
@@ -96,7 +100,7 @@ TEST_F(WavetableOscTest, CosineWaveAtFsOver8)
 
     executeSorted();
 
-    EXPECT_THAT(out, Pointwise(FloatNear(0.001), truth));
+    EXPECT_THAT(graph[idx]->getOutput(), Pointwise(FloatNear(0.001), truth));
 }
 
 // TODO: not entirely sure I've proved out phase input sufficiently.
