@@ -4,6 +4,7 @@ target_sources(ReusableSynthInterface
     PUBLIC
         FILE_SET HEADERS 
         FILES 
+            conversions.hpp
             logger.hpp
             noncopyable.hpp
             ring_buffer.hpp
