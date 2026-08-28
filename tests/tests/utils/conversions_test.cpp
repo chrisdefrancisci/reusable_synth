@@ -43,10 +43,6 @@ TEST(Conversions, CvToFrequency)
 
 TEST(Conversions, FrequencyToCv)
 {
-    EXPECT_NEAR(440.0F, cv_to_freq(0.086614F), 0.0005F);
-    EXPECT_NEAR(8.176F, cv_to_freq(-1.0F), 0.0005F);
-    EXPECT_NEAR(12543.85F, cv_to_freq(1.0F), 0.006F);
-
     EXPECT_NEAR(0.086614F, freq_to_cv(440.0F), 0.0005F);
     EXPECT_NEAR(-1.0F, freq_to_cv(8.176F), 0.0005F);
     EXPECT_NEAR(1.0F, freq_to_cv(12543.85F), 0.005F);
