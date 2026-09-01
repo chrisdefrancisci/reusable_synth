@@ -12,8 +12,6 @@
 #include <reusable_synth/software/vertex_interface.hpp>
 #include <reusable_synth/software/wavetables.hpp>
 
-// TODO: scaling from -1 to +1 -> frequency. Linear? Logarathmic?
-
 // TODO: if first sample == last sample, we can optimize checking the indices
 // see https://juce.com/tutorials/tutorial_wavetable_synth/
 template<typename DataType, size_t Size>
